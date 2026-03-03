@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\\\QLDAPM\\\\Frontend\")",
+      "Bash(dir:*)"
+    ]
+  }
+}
