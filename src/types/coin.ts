@@ -135,3 +135,20 @@ export type KlineData = {
   eventTime: string; // Example: "2024-10-18 22:21:00"
   kline_data: KlineEntry[]; // Array of candles, latest is last
 };
+export type SearchCoinResult = {
+  id: string;
+  name: string;
+  api_symbol: string;
+  symbol: string;
+  market_cap_rank: number | null;
+  thumb: string;
+  large: string;
+};
+
+export type SearchResponse = {
+  coins: SearchCoinResult[];
+  exchanges: any[];
+  icos: any[];
+  categories: any[];
+  nfts: any[];
+};

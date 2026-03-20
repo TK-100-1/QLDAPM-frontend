@@ -16,31 +16,7 @@ interface Props {
 }
 
 export default function Alerts({ triggerList, indicatorList }: Props) {
-	const { basicUserInfor } = useAuth();
-	const role = basicUserInfor.vip_role as number;
 	const { isOpen, onOpenChange } = useDisclosure();
-
-	if (role < 2) {
-		return (
-			<FlexBox className="flex-col items-center justify-center gap-4 pt-20 h-full">
-				<p className="text-xl font-bold text-gray-500">
-					You do not have permission to access this page.
-				</p>
-				<FlexBox className="gap-2">
-					<p>
-						Only user with VIP 2 or above are allowed to use this
-						feature, please purchase VIP.
-					</p>
-					<Link
-						prefetch={false}
-						href="/market"
-						className="text-blue-500 hover:underline">
-						{`Back to market ->`}
-					</Link>
-				</FlexBox>
-			</FlexBox>
-		);
-	}
 
 	return (
 		<div className="w-8/12 h-full flex flex-col gap-4 pt-10">

@@ -33,8 +33,7 @@ export default function TriggerModal({
     await refreshToken();
 
     const res = await DeleteTrigger({
-      symbol: currentTrigger.symbol,
-      triggerType: currentTrigger.triggerType,
+      id: currentTrigger.alert_id,
     });
 
     if (res.success) {

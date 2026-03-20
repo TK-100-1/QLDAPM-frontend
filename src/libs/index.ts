@@ -8,6 +8,6 @@ export function customHeader(token: string | null | undefined) {
 	}
 	return {
 		"Content-Type": "application/json",
-		Cookie: `token=${token}`,
+		Authorization: token,
 	};
 }

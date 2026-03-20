@@ -21,7 +21,7 @@ export async function GET(req: NextRequest): Promise<Response> {
 		}
 
 		const response = await axios.get(
-			`${BaseUrl}/api/v1/vip1/kline?symbol=${symbol}&interval=${interval}`,
+			`${BaseUrl}/vip1/kline?symbol=${symbol}&interval=${interval}`,
 			{
 				headers: {
 					"Content-Type": "application/json",

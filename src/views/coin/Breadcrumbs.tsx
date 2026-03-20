@@ -8,11 +8,9 @@ interface Props {
 
 export default function CustomeBreadcrumbs({ name }: Props) {
   return (
-    <FlexBox className="w-full">
-      <Breadcrumbs underline="hover" size="lg">
-        <BreadcrumbItem href="/market">Market</BreadcrumbItem>
-        <BreadcrumbItem>{name}</BreadcrumbItem>
-      </Breadcrumbs>
-    </FlexBox>
+    <Breadcrumbs underline="hover" size="md" className="mb-4">
+      <BreadcrumbItem href="/market">Market</BreadcrumbItem>
+      <BreadcrumbItem>{name}</BreadcrumbItem>
+    </Breadcrumbs>
   );
 }

@@ -93,8 +93,7 @@ export async function fetchInfo() {
 
 export async function fetchAlerts() {
 	const cookieStore = cookies();
-	const res = await refreshToken();
-	const token = res.data ?? cookieStore.get("token")?.value;
+	const token = cookieStore.get("token")?.value;
 	const url = `${BaseUrl}/vip2/alerts`;
 
 	try {
@@ -110,10 +109,14 @@ export async function fetchAlerts() {
 		const list: any[] = res.data;
 
 		for (const item of list) {
-			if (item.triggerType == "indicator") {
-				indicatorList.push(item);
+			const mappedItem = {
+				...item,
+				alert_id: item._id, // Map MongoDB _id to alert_id expected by frontend
+			};
+			if (mappedItem.triggerType == "indicator") {
+				indicatorList.push(mappedItem);
 			} else {
-				triggerList.push(item);
+				triggerList.push(mappedItem);
 			}
 		}
 
@@ -233,5 +236,50 @@ export async function fetchCoinHistory(
 			status: error.status,
 			data: null,
 		} as CustomResponse<null>;
+	}
+}
+export async function searchCoins(query: string) {
+	const token = process.env.geckoToken;
+	const searchUrl = `https://api.coingecko.com/api/v3/search?query=${query}`;
+	const header = {
+		"Content-Type": "application/json",
+		"api-key": token,
+	};
+
+	try {
+		const searchRes = await axios.get(searchUrl, {
+			headers: header,
+		});
+
+		const coins = searchRes.data.coins.slice(0, 10); // Take top 10 results
+		if (coins.length === 0) {
+			return {
+				success: true,
+				message: "No coins found",
+				status: 200,
+				data: [],
+			} as CustomResponse<CoinData[]>;
+		}
+
+		const ids = coins.map((c: any) => c.id).join(",");
+		const marketUrl = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}`;
+		const marketRes = await axios.get(marketUrl, {
+			headers: header,
+		});
+
+		return {
+			success: true,
+			message: "",
+			status: marketRes.status,
+			data: marketRes.data,
+		} as CustomResponse<CoinData[]>;
+	} catch (error: any) {
+		console.error("[searchCoins] error:", error.response?.status, error.response?.data);
+		return {
+			success: false,
+			message: error.response?.data?.error ?? "Failed to search coins",
+			status: error.status,
+			data: [],
+		} as CustomResponse<CoinData[]>;
 	}
 }

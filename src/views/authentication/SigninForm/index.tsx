@@ -11,7 +11,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { signin } from "@/src/libs/serverAction/auth";
 
-type LoginMethod = "email" | "username";
 
 interface LoginFormData {
   identifier: string;
@@ -20,7 +19,6 @@ interface LoginFormData {
 export default function SignInForm() {
   const router = useRouter();
 
-  const [loginMethod, setLoginMethod] = useState<LoginMethod>("email");
   const [loginFormData, setLoginFormData] = useState<LoginFormData>({
     identifier: "",
     password: "",
@@ -28,16 +26,12 @@ export default function SignInForm() {
   const [isShowPassword, setIsShowPassword] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
-  const toggleShowPassword = () => {
-    setIsShowPassword(!isShowPassword);
-  };
 
   const handleSignIn = async () => {
     setError("");
     const res = await signin(
       loginFormData.identifier,
-      loginFormData.password,
-      loginMethod
+      loginFormData.password
     );
     console.log("[handleSignIn] result:", res);
     if (res.success) {
@@ -55,10 +49,10 @@ export default function SignInForm() {
 
       <h1 className="text-4xl font-bold">Sign In</h1>
 
-      <div className="w-full flex gap-4">
+      <div className="w-full">
         <Input
           radius="sm"
-          label={loginMethod === "email" ? "Email" : "Username"}
+          label="Email or Username"
           type="text"
           isRequired
           value={loginFormData.identifier}
@@ -66,24 +60,6 @@ export default function SignInForm() {
             setLoginFormData({ ...loginFormData, identifier: e.target.value })
           }
         />
-        <Select
-          label="Sign in method"
-          placeholder="Select a method"
-          radius="sm"
-          fullWidth={false}
-          isRequired
-          defaultSelectedKeys={["email"]}
-          onChange={(value) =>
-            setLoginMethod(value.target.value as LoginMethod)
-          }
-          className="w-60">
-          <SelectItem key="email" value="email">
-            Email
-          </SelectItem>
-          <SelectItem key="username" value="username">
-            Username
-          </SelectItem>
-        </Select>
       </div>
 
       <Input
@@ -98,7 +74,7 @@ export default function SignInForm() {
           <button
             className="focus:outline-none"
             type="button"
-            onClick={toggleShowPassword}
+            onClick={() => setIsShowPassword(!isShowPassword)}
             aria-label="toggle password visibility">
             {isShowPassword ? (
               <EyeSlash className="text-2xl text-default-400 pointer-events-none" />
