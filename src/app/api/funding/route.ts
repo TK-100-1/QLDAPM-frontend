@@ -20,7 +20,7 @@ export async function GET(req: NextRequest): Promise<Response> {
 		}
 
 		const response = await axios.get(
-			`${BaseUrl}/api/v1/funding-rate?symbol=${symbol}`,
+			`${BaseUrl}/funding-rate?symbol=${symbol}`,
 			{ headers: customHeader(token) }
 		);
 

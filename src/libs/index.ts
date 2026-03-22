@@ -14,14 +14,13 @@ export const BaseUrl =
 // }
 
 export function customHeader(token: string | null | undefined) {
-    if (!token) {
-        return {
-            'Content-Type': 'application/json',
-        };
-    }
-
-    return {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-    };
+	if (!token) {
+		return {
+			"Content-Type": "application/json",
+		};
+	}
+	return {
+		"Content-Type": "application/json",
+		Authorization: token,
+	};
 }

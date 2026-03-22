@@ -1,36 +1,48 @@
 import { refreshToken } from '@/src/libs/serverAction/auth';
 import {
-    changeEmail,
-    changePassword,
-    deposit,
-    purchaseVIP,
-} from '@/src/libs/serverAction/user';
-import { useAuth } from '@/src/provider/AuthProvider';
+  changeEmail,
+  changePassword,
+  deposit,
+  purchaseVIP,
+  updateUserInformation,
+} from "@/src/libs/serverAction/user";
+import { useAuth } from "@/src/provider/AuthProvider";
 import {
-    ChangeEmailPayload,
-    ChangePasswordPayload,
-    DepositCoinPayload,
-    PurchaseVIPPayload,
-} from '@/src/types/user';
+  ChangeEmailPayload,
+  ChangePasswordPayload,
+  DepositCoinPayload,
+  PurchaseVIPPayload,
+  UpdateUserInformationPayload,
+} from "@/src/types/user";
 import {
-    Button,
-    Input,
-    Modal,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    Select,
-    SelectItem,
-} from '@nextui-org/react';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { toast } from 'sonner';
+  Avatar,
+  Button,
+  Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  Select,
+  SelectItem,
+  Spacer,
+} from "@nextui-org/react";
+import {
+  Camera,
+  Envelope,
+  Eye,
+  EyeSlash,
+  UserCircle,
+  Wallet,
+} from "@phosphor-icons/react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface Props {
-    isOpen: boolean;
-    onOpenChange: () => void;
-    actionType: 'changePassword' | 'changeEmail' | 'deposit' | 'purchaseVIP';
+	isOpen: boolean;
+	onOpenChange: () => void;
+	actionType: "changePassword" | "updateInfo" | "deposit" | "purchaseVIP";
 }
 
 export default function UserActionModal({
@@ -38,33 +50,32 @@ export default function UserActionModal({
     onOpenChange,
     actionType,
 }: Props) {
-    const renderModal = () => {
-        switch (actionType) {
-            case 'changePassword':
-                return <ChangePassword onOpenChange={onOpenChange} />;
-            case 'changeEmail':
-                return <ChangeEmail onOpenChange={onOpenChange} />;
-            case 'deposit':
-                return <Deposit onOpenChange={onOpenChange} />;
-            case 'purchaseVIP':
-                return <PurchaseVIP />;
-            default:
-                return null;
-        }
-    };
+	const renderModal = () => {
+		switch (actionType) {
+			case "changePassword":
+				return <ChangePassword onOpenChange={onOpenChange} />;
+			case "updateInfo":
+				return <UpdateUserInformation onOpenChange={onOpenChange} />;
+			case "deposit":
+				return <Deposit onOpenChange={onOpenChange} />;
+			case "purchaseVIP":
+				return <PurchaseVIP />;
+			default:
+				return null;
+		}
+	};
 
-    return (
-        <Modal
-            disableAnimation
-            size="md"
-            radius="sm"
-            placement="center"
-            isOpen={isOpen}
-            onOpenChange={onOpenChange}
-        >
-            {renderModal()}
-        </Modal>
-    );
+	return (
+		<Modal
+			disableAnimation
+			size="md"
+			radius="lg"
+			placement="center"
+			isOpen={isOpen}
+			onOpenChange={onOpenChange}>
+			{renderModal()}
+		</Modal>
+	);
 }
 
 interface formProps {
@@ -72,195 +83,175 @@ interface formProps {
 }
 
 function ChangePassword({ onOpenChange }: formProps) {
-    const [formData, setFormData] = useState<ChangePasswordPayload>({
-        currentPassword: '',
-        newPassword: '',
-    });
-    const [confirmPassword, setConfirmPassword] = useState<string>('');
-    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-    const [formError, setFormError] = useState<string>('');
+	const [formData, setFormData] = useState<ChangePasswordPayload>({
+		current_password: "",
+		new_password: "",
+		confirm_new_password: "",
+	});
+	const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false });
 
-    const onSubmit = async () => {
-        setFieldErrors({});
-        setFormError('');
-        if (!formData.currentPassword) {
-            setFieldErrors({ currentPassword: 'Current password is required' });
-            return;
-        }
-        if (!formData.newPassword) {
-            setFieldErrors({ newPassword: 'New password is required' });
-            return;
-        }
-        if (formData.newPassword !== confirmPassword) {
-            setFieldErrors({ confirmPassword: 'Passwords do not match' });
-            return;
-        }
+	const onSubmit = async () => {
+		if (formData.current_password === "" || formData.new_password === "" || formData.confirm_new_password === "") {
+			toast.error("Please fill in all fields");
+			return;
+		}
 
-        await refreshToken();
+		if (formData.new_password !== formData.confirm_new_password) {
+			toast.error("New passwords do not match");
+			return;
+		}
 
-        const res = await changePassword(formData);
+		await refreshToken();
+		const res = await changePassword(formData);
 
-        if (res.success) {
-            toast.success(res.message);
-            setFormData({ currentPassword: '', newPassword: '' });
-            setConfirmPassword('');
-            onOpenChange();
-        } else {
-            // map server field errors if present
-            if (res.data && typeof res.data === 'object') {
-                setFieldErrors(res.data as Record<string, string>);
-            } else {
-                setFormError(res.message);
-            }
-            toast.error(res.message);
-        }
-    };
+		if (res.success) {
+			toast.success(res.message);
+			onOpenChange();
+		} else {
+			toast.error(res.message);
+		}
+	};
 
-    return (
-        <ModalContent>
-            <ModalHeader className="flex flex-col gap-1 text-2xl">
-                Change Password
-                <span className="text-sm text-default-400">
-                    Please enter your details to update password
-                </span>
-            </ModalHeader>
-            <ModalBody>
-                <Input
-                    radius="sm"
-                    label="Current Password"
-                    placeholder="Enter current password"
-                    type="password"
-                    isInvalid={!!fieldErrors.currentPassword}
-                    errorMessage={fieldErrors.currentPassword}
-                    value={formData.currentPassword}
-                    onChange={(e) => {
-                        setFormData({
-                            ...formData,
-                            currentPassword: e.target.value,
-                        });
-                        setFieldErrors((prev) => {
-                            const copy = { ...prev };
-                            delete copy.currentPassword;
-                            return copy;
-                        });
-                    }}
-                />
-                <Input
-                    radius="sm"
-                    label="New Password"
-                    placeholder="Minimum 8 characters"
-                    type="password"
-                    isInvalid={!!fieldErrors.newPassword}
-                    errorMessage={fieldErrors.newPassword}
-                    value={formData.newPassword}
-                    onChange={(e) => {
-                        setFormData({
-                            ...formData,
-                            newPassword: e.target.value,
-                        });
-                        setFieldErrors((prev) => {
-                            const copy = { ...prev };
-                            delete copy.newPassword;
-                            delete copy.confirmPassword;
-                            return copy;
-                        });
-                    }}
-                />
-                <Input
-                    radius="sm"
-                    label="Confirm New Password"
-                    placeholder="Re-type new password"
-                    type="password"
-                    isInvalid={!!fieldErrors.confirmPassword}
-                    errorMessage={fieldErrors.confirmPassword}
-                    value={confirmPassword}
-                    onChange={(e) => {
-                        setConfirmPassword(e.target.value);
-                        setFieldErrors((prev) => {
-                            const copy = { ...prev };
-                            delete copy.confirmPassword;
-                            return copy;
-                        });
-                    }}
-                />
-                {formError ? (
-                    <div className="text-sm text-red-600 mt-2">{formError}</div>
-                ) : null}
-            </ModalBody>
-            <ModalFooter className="flex items-center justify-between gap-4">
-                <div />
-                <div className="flex gap-3">
-                    <Button
-                        variant="ghost"
-                        color="default"
-                        onClick={onOpenChange}
-                    >
-                        Cancel
-                    </Button>
-                    <Button color="primary" onClick={onSubmit}>
-                        Update Password
-                    </Button>
-                </div>
-            </ModalFooter>
-        </ModalContent>
-    );
+	return (
+		<ModalContent className="p-4">
+			<ModalHeader className="flex flex-col items-center gap-2 pb-0">
+				<div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-2">
+					<Wallet size={32} className="text-blue-500" /> {/* Using Wallet as a placeholder icon for "Change Password" based on screenshot 2 */}
+				</div>
+				<h2 className="text-2xl font-bold">Change Password</h2>
+				<p className="text-sm text-slate-400 font-normal">Please enter your details to update password</p>
+			</ModalHeader>
+			<ModalBody className="gap-4 py-6">
+				<Input
+					radius="sm"
+					label="Current Password"
+					placeholder="Enter current password"
+					type={showPass.current ? "text" : "password"}
+					variant="bordered"
+					endContent={
+						<button type="button" onClick={() => setShowPass({...showPass, current: !showPass.current})}>
+							{showPass.current ? <EyeSlash size={20} /> : <Eye size={20} />}
+						</button>
+					}
+					value={formData.current_password}
+					onChange={(e) => setFormData({...formData, current_password: e.target.value})}
+				/>
+				<Input
+					radius="sm"
+					label="New Password"
+					placeholder="Minimum 8 characters"
+					type={showPass.new ? "text" : "password"}
+					variant="bordered"
+					endContent={
+						<button type="button" onClick={() => setShowPass({...showPass, new: !showPass.new})}>
+							{showPass.new ? <EyeSlash size={20} /> : <Eye size={20} />}
+						</button>
+					}
+					value={formData.new_password}
+					onChange={(e) => setFormData({...formData, new_password: e.target.value})}
+				/>
+				<Input
+					radius="sm"
+					label="Confirm New Password"
+					placeholder="Re-type new password"
+					type={showPass.confirm ? "text" : "password"}
+					variant="bordered"
+					endContent={
+						<button type="button" onClick={() => setShowPass({...showPass, confirm: !showPass.confirm})}>
+							{showPass.confirm ? <EyeSlash size={18} /> : <Eye size={18} />}
+						</button>
+					}
+					value={formData.confirm_new_password}
+					onChange={(e) => setFormData({...formData, confirm_new_password: e.target.value})}
+				/>
+			</ModalBody>
+			<ModalFooter className="flex-col gap-2">
+				<Button color="primary" className="w-full text-lg font-bold py-6" onClick={onSubmit}>
+					Update Password
+				</Button>
+				<Button variant="light" className="w-full" onClick={onOpenChange}>
+					Cancel
+				</Button>
+			</ModalFooter>
+		</ModalContent>
+	);
 }
 
-function ChangeEmail({ onOpenChange }: formProps) {
-    const router = useRouter();
-    const [formData, setFormData] = useState<ChangeEmailPayload>({
-        email: '',
-    });
+function UpdateUserInformation({ onOpenChange }: formProps) {
+	const { basicUserInfor } = useAuth();
+	const router = useRouter();
+	const [formData, setFormData] = useState<UpdateUserInformationPayload>({
+		username: basicUserInfor?.username || "",
+		email: basicUserInfor?.email || "",
+	});
 
-    const onSubmit = async () => {
-        if (formData.email === '') {
-            toast.error('Email cannot be empty');
-            return;
-        }
+	const onSubmit = async () => {
+		if (formData.username === "" || formData.email === "") {
+			toast.error("Please fill in all fields");
+			return;
+		}
 
-        await refreshToken();
+		await refreshToken();
+		const res = await updateUserInformation(formData);
 
-        const res = await changeEmail(formData);
+		if (res.success) {
+			toast.success(res.message);
+			onOpenChange();
+			router.refresh();
+		} else {
+			toast.error(res.message);
+		}
+	};
 
-        if (res.success) {
-            toast.success(res.message);
-            setFormData({
-                email: '',
-            });
-            onOpenChange();
-            router.refresh();
-        } else {
-            toast.error(res.message);
-        }
-    };
-
-    return (
-        <ModalContent>
-            <ModalHeader className="flex flex-col gap-1 text-2xl">
-                Change Email
-            </ModalHeader>
-            <ModalBody>
-                <Input
-                    radius="sm"
-                    label="New email"
-                    placeholder="Enter new email"
-                    type="text"
-                    value={formData.email}
-                    onChange={(e) => {
-                        setFormData({
-                            ...formData,
-                            email: e.target.value,
-                        });
-                    }}
-                />
-            </ModalBody>
-            <ModalFooter>
-                <Button color="primary" onClick={onSubmit}>
-                    Confirm
-                </Button>
-            </ModalFooter>
-        </ModalContent>
-    );
+	return (
+		<ModalContent className="p-4">
+			<ModalHeader className="flex flex-col items-center gap-2">
+				<h2 className="text-2xl font-bold">Update User Information</h2>
+				<p className="text-sm text-slate-400 font-normal">Manage your profile details below</p>
+			</ModalHeader>
+			<ModalBody className="gap-6 py-4">
+				<div className="flex flex-col items-center">
+					<div className="relative">
+						<Avatar src="/user.svg" className="w-24 h-24" />
+						<div className="absolute bottom-0 right-0 bg-blue-500 p-2 rounded-full border-2 border-white cursor-pointer hover:bg-blue-600 transition-colors">
+							<Camera size={16} className="text-white" />
+						</div>
+					</div>
+					<Spacer y={2} />
+					<span className="text-xl font-bold">{basicUserInfor?.name}</span>
+					<span className="text-xs text-slate-400 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-wider font-bold">
+						{basicUserInfor?.vip_role === 0 ? "VIP0 Member" : `VIP${basicUserInfor?.vip_role} Member`}
+					</span>
+				</div>
+				<Input
+					radius="sm"
+					label="Username"
+					placeholder="Enter username"
+					variant="bordered"
+					startContent={<UserCircle size={20} className="text-slate-400" />}
+					value={formData.username}
+					onChange={(e) => setFormData({...formData, username: e.target.value})}
+				/>
+				<Input
+					radius="sm"
+					label="Email Address"
+					placeholder="Enter email address"
+					variant="bordered"
+					startContent={<Envelope size={20} className="text-slate-400" />}
+					value={formData.email}
+					onChange={(e) => setFormData({...formData, email: e.target.value})}
+				/>
+			</ModalBody>
+			<ModalFooter className="flex-col gap-2">
+				<Button color="primary" className="w-full text-lg font-bold py-6" onClick={onSubmit}>
+					Save Changes
+				</Button>
+				<Button variant="light" className="w-full" onClick={onOpenChange}>
+					Cancel
+				</Button>
+			</ModalFooter>
+		</ModalContent>
+	);
 }
 
 function Deposit({ onOpenChange }: formProps) {

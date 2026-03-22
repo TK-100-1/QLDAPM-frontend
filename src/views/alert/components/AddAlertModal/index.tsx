@@ -41,16 +41,12 @@ export default function AddAlertModal({ isOpen, onOpenChange }: Props) {
 						<Tab key="snooze" title="Snooze">
 							<SnoozeForm />
 						</Tab>
-						{role > 2 && (
-							<Tab key="indicator" title="Indicator">
-								<IndicatorForm />
-							</Tab>
-						)}
-						{role > 2 && (
-							<Tab key="custom" title="Custom">
-								<CustomForm />
-							</Tab>
-						)}
+						<Tab key="indicator" title="Indicator">
+							<IndicatorForm />
+						</Tab>
+						<Tab key="custom" title="Custom">
+							<CustomForm />
+						</Tab>
 					</Tabs>
 				</ModalBody>
 			</ModalContent>

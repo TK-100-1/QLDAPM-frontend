@@ -44,8 +44,14 @@ export type ResetPasswordPayload = {
 };
 
 export type ChangePasswordPayload = {
-    currentPassword?: string;
-    newPassword: string;
+  current_password: string;
+  new_password: string;
+  confirm_new_password: string;
+};
+
+export type UpdateUserInformationPayload = {
+  username: string;
+  email: string;
 };
 
 export type ChangeEmailPayload = {

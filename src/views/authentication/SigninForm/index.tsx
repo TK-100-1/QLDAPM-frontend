@@ -11,7 +11,6 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { signin } from '@/src/libs/serverAction/auth';
 
-type LoginMethod = 'email' | 'username';
 
 interface LoginFormData {
     identifier: string;
@@ -20,144 +19,91 @@ interface LoginFormData {
 export default function SignInForm() {
     const router = useRouter();
 
-    const [loginMethod, setLoginMethod] = useState<LoginMethod>('email');
-    const [loginFormData, setLoginFormData] = useState<LoginFormData>({
-        identifier: '',
-        password: '',
-    });
-    const [isShowPassword, setIsShowPassword] = useState<boolean>(false);
-    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-    const [formError, setFormError] = useState<string>('');
+  const [loginFormData, setLoginFormData] = useState<LoginFormData>({
+    identifier: "",
+    password: "",
+  });
+  const [isShowPassword, setIsShowPassword] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
-    const toggleShowPassword = () => {
-        setIsShowPassword(!isShowPassword);
-    };
 
-    const handleSignIn = async () => {
-        setFieldErrors({});
-        setFormError('');
-        const res = await signin(
-            loginFormData.identifier,
-            loginFormData.password,
-            loginMethod,
-        );
-        console.log('[handleSignIn] result:', res);
-        if (res.success) {
-            toast.success(res.message);
-            router.refresh();
-            router.push('/market');
-        } else {
-            if (res.data && typeof res.data === 'object') {
-                setFieldErrors(res.data as Record<string, string>);
-            } else {
-                setFormError(res.message);
-            }
-            toast.error(res.message);
-        }
-    };
-    return (
-        <Form className="w-[24rem] sm:w-[28rem] bg-white shadow-lg p-8 rounded-lg">
-            <Logo className="w-52 h-[72px]" />
-
-            <h1 className="text-4xl font-bold">Sign In</h1>
-
-            <div className="w-full flex gap-4">
-                <Input
-                    radius="sm"
-                    label={loginMethod === 'email' ? 'Email' : 'Username'}
-                    type="text"
-                    isRequired
-                    isInvalid={!!fieldErrors.identifier}
-                    errorMessage={fieldErrors.identifier}
-                    value={loginFormData.identifier}
-                    onChange={(e) => {
-                        setLoginFormData({
-                            ...loginFormData,
-                            identifier: e.target.value,
-                        });
-                        setFieldErrors((prev) => {
-                            const copy = { ...prev };
-                            delete copy.identifier;
-                            return copy;
-                        });
-                    }}
-                />
-                <Select
-                    label="Sign in method"
-                    placeholder="Select a method"
-                    radius="sm"
-                    fullWidth={false}
-                    isRequired
-                    defaultSelectedKeys={['email']}
-                    onChange={(value) =>
-                        setLoginMethod(value.target.value as LoginMethod)
-                    }
-                    className="w-60"
-                >
-                    <SelectItem key="email" value="email">
-                        Email
-                    </SelectItem>
-                    <SelectItem key="username" value="username">
-                        Username
-                    </SelectItem>
-                </Select>
-            </div>
-
-            <Input
-                radius="sm"
-                label="Password"
-                type={isShowPassword ? 'text' : 'password'}
-                isRequired
-                isInvalid={!!fieldErrors.password}
-                errorMessage={fieldErrors.password}
-                value={loginFormData.password}
-                endContent={
-                    <button
-                        className="focus:outline-none"
-                        type="button"
-                        onClick={toggleShowPassword}
-                        aria-label="toggle password visibility"
-                    >
-                        {isShowPassword ? (
-                            <EyeSlash className="text-2xl text-default-400 pointer-events-none" />
-                        ) : (
-                            <Eye className="text-2xl text-default-400 pointer-events-none" />
-                        )}
-                    </button>
-                }
-                onChange={(e) => {
-                    setLoginFormData({
-                        ...loginFormData,
-                        password: e.target.value,
-                    });
-                    setFieldErrors((prev) => {
-                        const copy = { ...prev };
-                        delete copy.password;
-                        return copy;
-                    });
-                }}
-            />
-
-            <div className="w-full">
-                <Link
-                    href="/forgot_password"
-                    className="text-md text-blue-400 hover:underline hover:underline-offset-2"
-                >
-                    Forgot password?
-                </Link>
-            </div>
-
-            <ContinueButton onClick={handleSignIn} />
-            {formError ? (
-                <div className="text-sm text-red-600 mt-2">{formError}</div>
-            ) : null}
-
-            <div className="w-full flex gap-2 items-center justify-center">
-                <span>{"Don't have an account?"}</span>
-                <Link href="/signup" className="text-blue-400 hover:underline">
-                    Get started now
-                </Link>
-            </div>
-        </Form>
+  const handleSignIn = async () => {
+    setError("");
+    const res = await signin(
+      loginFormData.identifier,
+      loginFormData.password
     );
+    console.log("[handleSignIn] result:", res);
+    if (res.success) {
+      toast.success(res.message);
+      router.refresh();
+      router.push("/market");
+    } else {
+      setError(res.message);
+      toast.error(res.message);
+    }
+  };
+  return (
+    <Form className="w-[24rem] sm:w-[28rem] bg-white shadow-lg p-8 rounded-lg">
+      <Logo className="w-52 h-[72px]" />
+
+      <h1 className="text-4xl font-bold">Sign In</h1>
+
+      <div className="w-full">
+        <Input
+          radius="sm"
+          label="Email or Username"
+          type="text"
+          isRequired
+          value={loginFormData.identifier}
+          onChange={(e) =>
+            setLoginFormData({ ...loginFormData, identifier: e.target.value })
+          }
+        />
+      </div>
+
+      <Input
+        radius="sm"
+        label="Password"
+        type={isShowPassword ? "text" : "password"}
+        isRequired
+        isInvalid={!!error}
+        errorMessage={error}
+        value={loginFormData.password}
+        endContent={
+          <button
+            className="focus:outline-none"
+            type="button"
+            onClick={() => setIsShowPassword(!isShowPassword)}
+            aria-label="toggle password visibility">
+            {isShowPassword ? (
+              <EyeSlash className="text-2xl text-default-400 pointer-events-none" />
+            ) : (
+              <Eye className="text-2xl text-default-400 pointer-events-none" />
+            )}
+          </button>
+        }
+        onChange={(e) =>
+          setLoginFormData({ ...loginFormData, password: e.target.value })
+        }
+      />
+
+      <div className="w-full">
+        <Link
+          href="/forgot_password"
+          className="text-md text-blue-400 hover:underline hover:underline-offset-2">
+          Forgot password?
+        </Link>
+      </div>
+
+      <ContinueButton onClick={handleSignIn} />
+
+      <div className="w-full flex gap-2 items-center justify-center">
+        <span>{"Don't have an account?"}</span>
+        <Link href="/signup" className="text-blue-400 hover:underline">
+          Get started now
+        </Link>
+      </div>
+    </Form>
+  );
 }
