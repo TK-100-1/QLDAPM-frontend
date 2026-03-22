@@ -1,40 +1,37 @@
-import { Observable } from "rxjs";
-import { httpService } from "../http";
+import { Observable } from 'rxjs';
+import { httpService } from '../http';
 import {
-	ChangePasswordPayload,
-	ChangeEmailPayload,
-	DepositCoinPayload,
-	PurchaseVIPPayload,
-	BasicUserInfo,
-} from "@/src/types/user";
+    ChangePasswordPayload,
+    ChangeEmailPayload,
+    DepositCoinPayload,
+    PurchaseVIPPayload,
+    BasicUserInfo,
+} from '@/src/types/user';
 
 export function fetchInfo(): Observable<CustomResponse<BasicUserInfo>> {
-	return httpService.get("/info");
+    return httpService.get('/info');
 }
 
 export function changePassword(
-	payload: ChangePasswordPayload
+    payload: ChangePasswordPayload,
 ): Observable<CustomResponse<null>> {
-	return httpService.put("/api/changePassword", payload);
+    return httpService.put('/user/me/change_password', payload);
 }
 
 export function changeEmail(
-	payload: ChangeEmailPayload
+    payload: ChangeEmailPayload,
 ): Observable<CustomResponse<null>> {
-	return httpService.put(`/api/changeEmail?email=${payload.email}`, {});
+    return httpService.put(`/api/changeEmail?email=${payload.email}`, {});
 }
 
 export function deposit(
-	payload: DepositCoinPayload
+    payload: DepositCoinPayload,
 ): Observable<CustomResponse<null>> {
-	return httpService.put(`/api/deposit?amount=${payload.amount}`, {});
+    return httpService.put(`/api/deposit?amount=${payload.amount}`, {});
 }
 
 export function purchaseVIP(
-	payload: PurchaseVIPPayload
+    payload: PurchaseVIPPayload,
 ): Observable<CustomResponse<null>> {
-	return httpService.put(
-		`/api/purchaseVip?vipLevel=${payload.vipLevel}`,
-		{}
-	);
+    return httpService.put(`/api/purchaseVip?vipLevel=${payload.vipLevel}`, {});
 }

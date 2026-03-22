@@ -13,7 +13,7 @@ import {
 export async function changePassword(payload: ChangePasswordPayload) {
     const cookieStore = cookies();
     const token = cookieStore.get('token')?.value;
-    const url = `${BaseUrl}/api/changePassword`;
+    const url = `${BaseUrl}/user/me/change_password`;
 
     // map to backend expected field names
     const body = {

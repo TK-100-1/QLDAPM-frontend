@@ -79,6 +79,7 @@ export default function CoinDetail({ historyData, coinDetail }: Props) {
         {historyData && (
           <HistoryChart id={coinDetail.id} historyData={historyData} />
         )}
+        
         <FlexBox className="flex-col gap-2">
           {coinDetail.description.en && (
             <Accordion defaultExpandedKeys={["description"]}>
