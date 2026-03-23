@@ -103,6 +103,7 @@ export default function HistoryChart({ id, historyData }: Props) {
                 },
             ],
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentIndex, coinChartData, id]);
 
     const options = {
