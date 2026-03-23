@@ -20,7 +20,7 @@ export async function GET(req: NextRequest): Promise<Response> {
 		}
 
 		const response = await axios.get(
-			`${BaseUrl}/api/v1/spot-price?symbol=${symbol}`,
+			`${BaseUrl}/spot-price?symbol=${symbol}`,
 			{ headers: customHeader(token) }
 		);
 

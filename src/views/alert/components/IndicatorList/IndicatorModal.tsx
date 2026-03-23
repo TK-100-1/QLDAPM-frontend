@@ -33,7 +33,7 @@ export default function IndicatorModal({
     await refreshToken();
 
     const res = await DeleteIndicatorTrigger({
-      symbol: currentIndicator.symbol,
+      id: currentIndicator.alert_id,
     });
 
     if (res.success) {
