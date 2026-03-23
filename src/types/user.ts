@@ -10,6 +10,7 @@ export type BasicUserInfo = {
     name: string;
     email: string;
     username: string;
+    avatar?: string;
     coin: number;
     vip_role: Role;
 };
@@ -44,14 +45,14 @@ export type ResetPasswordPayload = {
 };
 
 export type ChangePasswordPayload = {
-  current_password: string;
-  new_password: string;
-  confirm_new_password: string;
+    current_password: string;
+    new_password: string;
+    confirm_new_password: string;
 };
 
 export type UpdateUserInformationPayload = {
-  username: string;
-  email: string;
+    username: string;
+    email: string;
 };
 
 export type ChangeEmailPayload = {
