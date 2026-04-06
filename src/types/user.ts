@@ -1,3 +1,4 @@
+
 export enum Role {
     VIP0 = 0,
     VIP1 = 1,
@@ -7,6 +8,7 @@ export enum Role {
 
 //Info
 export type BasicUserInfo = {
+    vip_level: string;
     name: string;
     email: string;
     username: string;

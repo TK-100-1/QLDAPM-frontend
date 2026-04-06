@@ -1,5 +1,5 @@
 import { useAuth } from '@/src/provider/AuthProvider';
-import { Role } from '@/src/types/user';
+// import { Role } from '@/src/types/user';
 import {
     Avatar,
     Listbox,
@@ -22,20 +22,20 @@ interface Props {
     onOpenChangeMain: () => void;
 }
 
-const renderVipRole = (role: Role) => {
-    switch (role) {
-        case 0:
-            return 'VIP0';
-        case 1:
-            return 'VIP1';
-        case 2:
-            return 'VIP2';
-        case 3:
-            return 'VIP3';
-        default:
-            return 'VIP0';
-    }
-};
+// const renderVipRole = (role: Role) => {
+//     switch (role) {
+//         case 0:
+//             return 'VIP0';
+//         case 1:
+//             return 'VIP1';
+//         case 2:
+//             return 'VIP2';
+//         case 3:
+//             return 'VIP3';
+//         default:
+//             return 'VIP0';
+//     }
+// };
 
 export default function UserProfileModal({
     isOpenMain,
@@ -75,7 +75,7 @@ export default function UserProfileModal({
                         <div className="flex flex-col gap-1">
                             <h2 className="text-2xl font-bold text-slate-900">
                                 {basicUserInfor.name} -{' '}
-                                {renderVipRole(basicUserInfor.vip_role)}
+                                {basicUserInfor.vip_level}
                             </h2>
                             <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-slate-500">
                                 <div className="flex items-center gap-2">

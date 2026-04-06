@@ -36,6 +36,7 @@ export default function KlineChart({ symbol }: Props) {
     const [interval, setIntervalValue] = useState('1h');
     const [viewRange, setViewRange] = useState<[number, number]>([0, 100]); // Percentage range [start, end]
     const [data, setData] = useState<KlineData | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     // Sync range when data loads
     useEffect(() => {
@@ -51,9 +52,11 @@ export default function KlineChart({ symbol }: Props) {
         async function fetchKline() {
             if (symbol.toUpperCase() === 'USDT') {
                 setLoading(false);
+                setError(null);
                 return;
             }
             setLoading(true);
+            setError(null);
             const symbolUpper = symbol.toUpperCase() + 'USDT';
             try {
                 const res = await fetch(
@@ -62,9 +65,19 @@ export default function KlineChart({ symbol }: Props) {
                 if (res.ok) {
                     const klineData = await res.json();
                     setData(klineData);
+                    setError(null);
+                } else if (res.status === 403) {
+                    setError('Không đủ VIP để xem dữ liệu này');
+                    setData(null);
+                } else {
+                    console.error('Failed to fetch kline data:', res.status);
+                    setError('Không thể tải dữ liệu');
+                    setData(null);
                 }
             } catch (err) {
                 console.error('Failed to fetch kline data:', err);
+                setError('Lỗi kết nối');
+                setData(null);
             } finally {
                 setLoading(false);
             }
@@ -272,6 +285,20 @@ export default function KlineChart({ symbol }: Props) {
                             label="Loading price action..."
                             color="primary"
                         />
+                    </div>
+                ) : error ? (
+                    <div className="absolute inset-0 flex items-center justify-center bg-red-50 rounded-xl">
+                        <div className="flex flex-col items-center gap-2">
+                            <div className="text-red-500 font-bold text-lg">
+                                {error}
+                            </div>
+                            {error === 'Không đủ VIP để xem dữ liệu này' && (
+                                <div className="text-sm text-red-400">
+                                    Vui lòng nâng cấp VIP để xem dữ liệu chi
+                                    tiết
+                                </div>
+                            )}
+                        </div>
                     </div>
                 ) : chartData ? (
                     <Chart

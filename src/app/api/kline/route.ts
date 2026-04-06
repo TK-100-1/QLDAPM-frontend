@@ -1,39 +1,48 @@
-import axios from "axios";
-import { NextRequest } from "next/server";
-import { cookies } from "next/headers";
-import { BaseUrl } from "@/src/libs";
+import axios from 'axios';
+import { NextRequest } from 'next/server';
+import { cookies } from 'next/headers';
+import { BaseUrl } from '@/src/libs';
 
 export async function GET(req: NextRequest): Promise<Response> {
-	const cookieStore = cookies();
-	const token = cookieStore.get("token")?.value;
+    const cookieStore = cookies();
+    const token = cookieStore.get('token')?.value;
+    console.log('cookies', cookieStore);
+    console.log('token check:', token);
+    try {
+        if (!token) {
+            return new Response('Unauthorized: Token is missing', {
+                status: 401,
+            });
+        }
 
-	try {
-		if (!token) {
-			return new Response("Unauthorized: Token is missing", { status: 401 });
-		}
+        const { searchParams } = new URL(req.url);
+        const symbol =
+            searchParams.get('symbol') || searchParams.get('symbols');
+        const interval = searchParams.get('interval') ?? '1m';
+        console.log(symbol, interval);
+        if (!symbol) {
+            return new Response('Bad Request: Missing symbol', { status: 400 });
+        }
 
-		const { searchParams } = new URL(req.url);
-		const symbol = searchParams.get("symbol") || searchParams.get("symbols");
-		const interval = searchParams.get("interval") ?? "1m";
+        const response = await axios.get(
+            `${BaseUrl}/vip1/kline?symbol=${symbol}&interval=${interval}`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: token,
+                },
+            },
+        );
 
-		if (!symbol) {
-			return new Response("Bad Request: Missing symbol", { status: 400 });
-		}
-
-		const response = await axios.get(
-			`${BaseUrl}/vip1/kline?symbol=${symbol}&interval=${interval}`,
-			{
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: token,
-				},
-			}
-		);
-
-		return Response.json(response.data);
-	} catch (error: any) {
-		const status = error.response?.status ?? 500;
-		const message = error.response?.data?.error ?? "Failed to fetch kline";
-		return new Response(message, { status });
-	}
+        return Response.json(response.data);
+    } catch (error: any) {
+        const status = error.response?.status ?? 500;
+        const message = error.response?.data?.error ?? 'Failed to fetch kline';
+        console.error('AXIOS ERROR:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message,
+        });
+        return new Response(message, { status });
+    }
 }

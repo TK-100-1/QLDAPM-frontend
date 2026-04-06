@@ -6,6 +6,7 @@ import { IndicatorTrigerData, TriggerConditionData } from '@/src/types/alert';
 import TriggerList from './components/TriggerList';
 import { H1 } from '@/src/components/Heading';
 import IndicatorList from './components/IndicatorList';
+import { useState } from 'react';
 // import { useAuth } from "@/src/provider/AuthProvider";
 // import FlexBox from "@/src/components/Box/FlexBox";
 // import Link from "next/link";
@@ -17,6 +18,10 @@ interface Props {
 
 export default function Alerts({ triggerList, indicatorList }: Props) {
     const { isOpen, onOpenChange } = useDisclosure();
+    const [isTriggerEditing, setIsTriggerEditing] = useState(false);
+    const [isIndicatorEditing, setIsIndicatorEditing] = useState(false);
+
+    const isAnyEditing = isTriggerEditing || isIndicatorEditing;
 
     return (
         <div className="w-8/12 h-full flex flex-col gap-4 pt-10">
@@ -29,16 +34,23 @@ export default function Alerts({ triggerList, indicatorList }: Props) {
                     onClick={() => onOpenChange()}
                     color="primary"
                     className="font-medium"
+                    isDisabled={isAnyEditing}
                 >
                     Add alert
                 </Button>
             </div>
             <Divider />
             <H1>Trigger Alerts</H1>
-            <TriggerList triggerList={triggerList} />
+            <TriggerList
+                triggerList={triggerList}
+                onEditingChange={setIsTriggerEditing}
+            />
             <Spacer y={2} />
             <H1>Indicator Alerts</H1>
-            <IndicatorList indicatorList={indicatorList} />
+            <IndicatorList
+                indicatorList={indicatorList}
+                onEditingChange={setIsIndicatorEditing}
+            />
         </div>
     );
 }
