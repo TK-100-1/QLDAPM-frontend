@@ -114,43 +114,74 @@ export async function fetchInfo() {
 export async function fetchAlerts() {
     const cookieStore = cookies();
     const token = cookieStore.get('token')?.value;
-    const url = `${BaseUrl}/vip2/alerts`;
+    const vip2Url = `${BaseUrl}/vip2/alerts`;
+    const vip3Url = `${BaseUrl}/vip3/indicators`;
 
+    const triggerList: TriggerConditionData[] = [];
+    const indicatorList: IndicatorTrigerData[] = [];
+
+    // Fetch trigger alerts from VIP-2 endpoint
     try {
-        const res = await axios.get(url, {
+        const res = await axios.get(vip2Url, {
             headers: {
                 'Content-Type': 'application/json',
                 Authorization: token,
             },
         });
 
-        const triggerList: TriggerConditionData[] = [];
-        const indicatorList: IndicatorTrigerData[] = [];
         const list: any[] = res.data;
-
         for (const item of list) {
-            const mappedItem = {
+            triggerList.push({
                 ...item,
-                alert_id: item._id, // Map MongoDB _id to alert_id expected by frontend
-            };
-            if (mappedItem.triggerType == 'indicator') {
-                indicatorList.push(mappedItem);
-            } else {
-                triggerList.push(mappedItem);
-            }
+                alert_id: item._id,
+                triggerType:
+                    item.triggerType || item.trigger_type || item.type || '',
+                spotPriceThreshold:
+                    item.spotPriceThreshold ||
+                    item.spot_price_threshold ||
+                    item.price ||
+                    item.threshold ||
+                    0,
+            });
         }
-
-        return {
-            triggerList,
-            indicatorList,
-        };
-    } catch (error) {
-        console.error(error);
-        return {
-            triggerList: [],
-            indicatorList: [],
-        };
+    } catch (error: any) {
+        console.error(
+            '[fetchAlerts] VIP-2 fetch failed:',
+            error?.response?.data || error,
+        );
     }
+
+    // Fetch indicator alerts from VIP-3 endpoint
+    try {
+        const res = await axios.get(vip3Url, {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: token,
+            },
+        });
+
+        const list: any[] = res.data;
+        for (const item of list) {
+            indicatorList.push({
+                ...item,
+                alert_id: item._id,
+                triggerType: 'indicator',
+                value: item.threshold || 0,
+                indicator: item.indicator || null,
+                period: item.period || 0,
+            });
+        }
+    } catch (error: any) {
+        console.error(
+            '[fetchAlerts] VIP-3 fetch failed:',
+            error?.response?.data || error,
+        );
+    }
+
+    return {
+        triggerList,
+        indicatorList,
+    };
 }
 
 export async function fetchCoinList(currency: string, page: number) {

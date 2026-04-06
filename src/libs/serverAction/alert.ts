@@ -56,9 +56,14 @@ export async function CreateTriggerAlert(payload: CreateTriggerPayload) {
         const res = await axios.post(
             url,
             {
-                ...payload,
-                type: payload.triggerType,
-                threshold: payload.price, // Align with backend checker
+                symbol: payload.symbol,
+                condition: payload.condition,
+                notification_method: payload.notification_method,
+                trigger_type: payload.triggerType,
+                spot_price_threshold: payload.price,
+                price: payload.price,
+                fundingRate: payload.fundingRate,
+                threshold: payload.price,
             },
             {
                 headers: customHeader(token),
@@ -85,6 +90,7 @@ export async function CreateTriggerAlert(payload: CreateTriggerPayload) {
 
 export async function CreateIndicatorAlert(
     payload: CreateIndicatorTriggerPayload,
+    period: number = 14,
 ) {
     const cookieStore = cookies();
     const token = cookieStore.get('token')?.value;
@@ -97,8 +103,9 @@ export async function CreateIndicatorAlert(
             {
                 symbol: payload.symbol,
                 indicator: payload.indicators,
-                period: 14, // Default period as frontend doesn't have it yet
+                period: period,
                 notification_method: payload.notification_method,
+                condition: payload.condition,
                 threshold: payload.price,
             },
             {
@@ -194,7 +201,73 @@ export async function DeleteTrigger(payload: { id: string }) {
     }
 }
 
+export async function UpdateTrigger(
+    payload: { id: string } & CreateTriggerPayload,
+) {
+    const cookieStore = cookies();
+    const token = cookieStore.get('token')?.value;
+    const url = `${BaseUrl}/vip2/alerts/${payload.id}`;
+
+    try {
+        const res = await axios.put(
+            url,
+            {
+                symbol: payload.symbol,
+                condition: payload.condition,
+                notification_method: payload.notification_method,
+                trigger_type: payload.triggerType,
+                spot_price_threshold: payload.price,
+                price: payload.price,
+                fundingRate: payload.fundingRate,
+                threshold: payload.price,
+            },
+            {
+                headers: customHeader(token),
+            },
+        );
+
+        return {
+            success: true,
+            message: res.data.message,
+            status: res.status,
+            data: null,
+        } as CustomResponse<null>;
+    } catch (error: any) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.error || 'Failed to update alert',
+            status: error.status,
+            data: null,
+        } as CustomResponse<null>;
+    }
+}
+
 export async function DeleteIndicatorTrigger(payload: { id: string }) {
-    // Re-use vip2 delete as indicator results are also in 'alerts' collection
-    return DeleteTrigger(payload);
+    const cookieStore = cookies();
+    const token = cookieStore.get('token')?.value;
+    const url = `${BaseUrl}/vip3/indicators/${payload.id}`;
+
+    try {
+        const res = await axios.delete(url, {
+            headers: customHeader(token),
+        });
+
+        return {
+            success: true,
+            message: res.data.message,
+            status: res.status,
+            data: null,
+        } as CustomResponse<null>;
+    } catch (error: any) {
+        console.error(error);
+        return {
+            success: false,
+            message:
+                error.response?.data?.error ||
+                'Failed to delete indicator alert',
+            status: error.status,
+            data: null,
+        } as CustomResponse<null>;
+    }
 }
