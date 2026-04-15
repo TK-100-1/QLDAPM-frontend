@@ -1,5 +1,6 @@
 'use client';
 import Form from '@/src/components/Form';
+import CoinSymbolSelect from '../CoinSymbolSelect';
 import { CreateIndicatorAlert } from '@/src/libs/serverAction/alert';
 import { refreshToken } from '@/src/libs/serverAction/auth';
 import {
@@ -62,12 +63,11 @@ export default function IndicatorForm() {
 
     return (
         <Form className="p-0">
-            <Input
+            <CoinSymbolSelect
                 label="Coin symbol"
-                placeholder="bitcoin, ethereum, ..."
-                radius="sm"
-                onChange={(e) => onChangeForm({ symbol: e.target.value })}
+                placeholder="Select a coin"
                 value={formData.symbol}
+                onValueChange={(symbol) => onChangeForm({ symbol })}
             />
             <Select
                 onChange={(e) => {

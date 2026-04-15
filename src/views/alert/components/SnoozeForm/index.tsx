@@ -1,5 +1,6 @@
 'use client';
 import Form from '@/src/components/Form';
+import CoinSymbolSelect from '../CoinSymbolSelect';
 import {
     ConditionType,
     CONDITIONTYPE,
@@ -7,13 +8,7 @@ import {
     TRIGGERTYPE,
     TriggerType,
 } from '@/src/types/alert';
-import {
-    Button,
-    DatePicker,
-    Input,
-    Select,
-    SelectItem,
-} from '@nextui-org/react';
+import { Button, DatePicker, Select, SelectItem } from '@nextui-org/react';
 import { useState } from 'react';
 import { parseDateTime } from '@internationalized/date';
 import { CreateSnoozeAlert } from '@/src/libs/serverAction/alert';
@@ -66,12 +61,11 @@ export default function SnoozeForm() {
 
     return (
         <Form className="p-0">
-            <Input
+            <CoinSymbolSelect
                 label="Coin symbol"
-                placeholder="BTCUSDT, ETHUSDT, ..."
-                radius="sm"
-                onChange={(e) => onChangeForm({ symbol: e.target.value })}
+                placeholder="Select a coin"
                 value={formData.symbol}
+                onValueChange={(symbol) => onChangeForm({ symbol })}
             />
             <Select
                 onChange={(e) =>
