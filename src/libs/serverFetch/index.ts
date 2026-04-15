@@ -2,7 +2,11 @@ import { cookies } from 'next/headers';
 import { BaseUrl } from '..';
 import axios from 'axios';
 import { BasicUserInfo } from '@/src/types/user';
-import { IndicatorTrigerData, TriggerConditionData } from '@/src/types/alert';
+import {
+    IndicatorTrigerData,
+    SnoozeAlertData,
+    TriggerConditionData,
+} from '@/src/types/alert';
 import { CoinData, CoinDetailData, CoinHistoryData } from '@/src/types/coin';
 // import mockCoinData from "./mockCoinData.json";
 // import mockHistoryData from "./mockHistoryData.json";
@@ -118,6 +122,7 @@ export async function fetchAlerts() {
     const vip3Url = `${BaseUrl}/vip3/indicators`;
 
     const triggerList: TriggerConditionData[] = [];
+    const snoozeList: SnoozeAlertData[] = [];
     const indicatorList: IndicatorTrigerData[] = [];
 
     // Fetch trigger alerts from VIP-2 endpoint
@@ -131,11 +136,31 @@ export async function fetchAlerts() {
 
         const list: any[] = res.data;
         for (const item of list) {
+            const triggerType =
+                item.triggerType || item.trigger_type || item.type || '';
+            const isSnooze = Boolean(item.snooze_condition);
+
+            if (isSnooze) {
+                snoozeList.push({
+                    ...item,
+                    alert_id: item._id,
+                    triggerType,
+                    start_time: item.start_time || item.created_at || '',
+                    end_time: item.end_time || '',
+                    snooze_condition: item.snooze_condition || '',
+                    is_active:
+                        typeof item.is_active === 'boolean'
+                            ? item.is_active
+                            : true,
+                    notification_method: item.notification_method || 'telegram',
+                });
+                continue;
+            }
+
             triggerList.push({
                 ...item,
                 alert_id: item._id,
-                triggerType:
-                    item.triggerType || item.trigger_type || item.type || '',
+                triggerType,
                 spotPriceThreshold:
                     item.spotPriceThreshold ||
                     item.spot_price_threshold ||
@@ -180,6 +205,7 @@ export async function fetchAlerts() {
 
     return {
         triggerList,
+        snoozeList,
         indicatorList,
     };
 }
