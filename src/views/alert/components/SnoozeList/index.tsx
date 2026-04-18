@@ -1,7 +1,9 @@
 'use client';
+
 import FlexBox from '@/src/components/Box/FlexBox';
-import { TriggerConditionData } from '@/src/types/alert';
+import { SnoozeAlertData } from '@/src/types/alert';
 import {
+    Chip,
     Table,
     TableBody,
     TableCell,
@@ -11,25 +13,26 @@ import {
     useDisclosure,
 } from '@nextui-org/react';
 import { useCallback, useState } from 'react';
-import TriggerModal from './TriggerModal';
+import SnoozeModal from './SnoozeModal';
 
 interface Props {
-    triggerList: TriggerConditionData[];
+    snoozeList: SnoozeAlertData[];
     onEditingChange?: (isEditing: boolean) => void;
 }
 
-export default function TriggerList({ triggerList, onEditingChange }: Props) {
-    const { isOpen, onOpenChange } = useDisclosure();
-    const [currentTrigger, setCurrentTrigger] =
-        useState<TriggerConditionData | null>(null);
-    const [isAnyEditing, setIsAnyEditing] = useState(false);
+function formatDateTime(value: string) {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleString();
+}
 
-    const handleTriggerUpdate = useCallback(
-        (updatedTrigger: TriggerConditionData) => {
-            setCurrentTrigger(updatedTrigger);
-        },
-        [],
+export default function SnoozeList({ snoozeList, onEditingChange }: Props) {
+    const { isOpen, onOpenChange } = useDisclosure();
+    const [currentSnooze, setCurrentSnooze] = useState<SnoozeAlertData | null>(
+        null,
     );
+    const [isAnyEditing, setIsAnyEditing] = useState(false);
 
     const handleEditingChange = useCallback(
         (isEditing: boolean) => {
@@ -40,8 +43,8 @@ export default function TriggerList({ triggerList, onEditingChange }: Props) {
     );
 
     const handleOpenChange = useCallback(
-        (isOpen: boolean) => {
-            if (!isOpen) {
+        (open: boolean) => {
+            if (!open) {
                 setIsAnyEditing(false);
                 onEditingChange?.(false);
             }
@@ -50,29 +53,44 @@ export default function TriggerList({ triggerList, onEditingChange }: Props) {
         [onOpenChange, onEditingChange],
     );
 
-    const renderCell = useCallback((user: any, columnKey: ColumnKey) => {
-        const cellValue = user[columnKey];
+    const renderCell = useCallback(
+        (item: SnoozeAlertData, columnKey: ColumnKey) => {
+            const cellValue = item[columnKey];
 
-        switch (columnKey) {
-            default:
-                return cellValue;
-        }
-    }, []);
+            switch (columnKey) {
+                case 'start_time':
+                case 'end_time':
+                    return formatDateTime(String(cellValue));
+                case 'is_active':
+                    return item.is_active ? (
+                        <Chip size="sm" color="success" variant="flat">
+                            Active
+                        </Chip>
+                    ) : (
+                        <Chip size="sm" color="default" variant="flat">
+                            Inactive
+                        </Chip>
+                    );
+                default:
+                    return String(cellValue ?? '-');
+            }
+        },
+        [],
+    );
 
     return (
         <FlexBox className="flex-col gap-4 w-full p-4 bg-neutral-100 shadow-md rounded-md">
-            <TriggerModal
+            <SnoozeModal
                 isOpen={isOpen}
                 onOpenChange={handleOpenChange}
-                currentTrigger={currentTrigger}
-                onTriggerUpdate={handleTriggerUpdate}
+                currentSnooze={currentSnooze}
                 isAnyEditing={isAnyEditing}
                 onEditingChange={handleEditingChange}
             />
             <Table
                 color="primary"
                 removeWrapper
-                aria-label="Example table with dynamic content"
+                aria-label="Snooze alerts table"
             >
                 <TableHeader columns={columns}>
                     {(column) => (
@@ -82,26 +100,23 @@ export default function TriggerList({ triggerList, onEditingChange }: Props) {
                     )}
                 </TableHeader>
                 <TableBody
-                    emptyContent={'No alerts to display.'}
-                    items={triggerList}
+                    emptyContent={'No snooze alerts to display.'}
+                    items={snoozeList}
                 >
-                    {(trigger) => (
+                    {(item) => (
                         <TableRow
+                            key={item.alert_id}
                             onClick={() => {
                                 if (!isAnyEditing) {
-                                    setCurrentTrigger(trigger);
+                                    setCurrentSnooze(item);
                                     onOpenChange();
                                 }
                             }}
                             className={`cursor-pointer hover:bg-neutral-200 ${isAnyEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            key={trigger.alert_id}
                         >
                             {(columnKey) => (
                                 <TableCell>
-                                    {renderCell(
-                                        trigger,
-                                        columnKey as ColumnKey,
-                                    )}
+                                    {renderCell(item, columnKey as ColumnKey)}
                                 </TableCell>
                             )}
                         </TableRow>
@@ -114,10 +129,11 @@ export default function TriggerList({ triggerList, onEditingChange }: Props) {
 
 type ColumnKey =
     | 'symbol'
-    | 'condition'
-    | 'notification_method'
-    | 'spotPriceThreshold'
-    | 'triggerType';
+    | 'triggerType'
+    | 'snooze_condition'
+    | 'start_time'
+    | 'end_time'
+    | 'is_active';
 
 type Column = {
     key: ColumnKey;
@@ -128,15 +144,8 @@ type Column = {
 const columns: Column[] = [
     { key: 'symbol', label: 'Symbol', align: 'start' },
     { key: 'triggerType', label: 'Trigger Type', align: 'center' },
-    { key: 'condition', label: 'Condition', align: 'center' },
-    {
-        key: 'spotPriceThreshold',
-        label: 'Spot Price Threshold',
-        align: 'center',
-    },
-    {
-        key: 'notification_method',
-        label: 'Notification Method',
-        align: 'center',
-    },
+    { key: 'snooze_condition', label: 'Snooze Condition', align: 'center' },
+    { key: 'start_time', label: 'Start Time', align: 'center' },
+    { key: 'end_time', label: 'End Time', align: 'center' },
+    { key: 'is_active', label: 'Status', align: 'center' },
 ];

@@ -1,5 +1,5 @@
 import { useAuth } from "@/src/provider/AuthProvider";
-import { Role } from "@/src/types/user";
+// import { Role } from '@/src/types/user';
 import {
   Avatar,
   Listbox,
@@ -15,26 +15,27 @@ import {
 import { At, Envelope, Wallet } from "@phosphor-icons/react";
 import { useState } from "react";
 import UserActionModal from "./UserActionModal";
+import { ServerUrl } from "@/src/libs";
 
 interface Props {
   isOpenMain: boolean;
   onOpenChangeMain: () => void;
 }
 
-const renderVipRole = (role: Role) => {
-  switch (role) {
-    case 0:
-      return "VIP0";
-    case 1:
-      return "VIP1";
-    case 2:
-      return "VIP2";
-    case 3:
-      return "VIP3";
-    default:
-      return "VIP0";
-  }
-};
+// const renderVipRole = (role: Role) => {
+//     switch (role) {
+//         case 0:
+//             return 'VIP0';
+//         case 1:
+//             return 'VIP1';
+//         case 2:
+//             return 'VIP2';
+//         case 3:
+//             return 'VIP3';
+//         default:
+//             return 'VIP0';
+//     }
+// };
 
 export default function UserProfileModal({
   isOpenMain,
@@ -48,6 +49,9 @@ export default function UserProfileModal({
 
   if (!basicUserInfor) return null;
 
+  const avatarUrl = basicUserInfor?.avatar
+    ? `${ServerUrl}${basicUserInfor.avatar}`
+    : "/user.svg";
   return (
     <Modal
       disableAnimation
@@ -55,27 +59,27 @@ export default function UserProfileModal({
       radius="lg"
       placement="center"
       isOpen={isOpenMain}
-      onOpenChange={onOpenChangeMain}>
+      onOpenChange={onOpenChangeMain}
+    >
       <ModalContent className="p-4">
         <ModalHeader className="flex flex-col gap-1 text-3xl font-bold px-6 pb-2">
           User Profile
         </ModalHeader>
         <ModalBody className="px-6 py-4">
           <div className="flex items-center gap-6 p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
-            <Avatar 
-               src="/user.svg" 
-               className="w-24 h-24 text-large"
-               isBordered 
-               color="default" 
+            <Avatar
+              src={avatarUrl}
+              className="w-24 h-24 text-large"
+              isBordered
             />
             <div className="flex flex-col gap-1">
               <h2 className="text-2xl font-bold text-slate-900">
-                {basicUserInfor.name} - {renderVipRole(basicUserInfor.vip_role)}
+                {basicUserInfor.name} - {basicUserInfor.vip_level}
               </h2>
               <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-slate-500">
                 <div className="flex items-center gap-2">
                   <At size={20} className="text-slate-400" />
-                  <span className="text-md">@{basicUserInfor.username}</span>
+                  <span className="text-md">{basicUserInfor.username}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Envelope size={20} className="text-slate-400" />
@@ -90,7 +94,7 @@ export default function UserProfileModal({
           </div>
 
           <Spacer y={4} />
-          
+
           <Listbox
             aria-label="User Actions"
             onAction={(key) => {
@@ -104,18 +108,10 @@ export default function UserProfileModal({
             }}
             className="p-0 border border-slate-100 rounded-2xl divide-y divide-slate-100 overflow-hidden"
           >
-            <ListboxItem key="changePassword">
-              Change password
-            </ListboxItem>
-            <ListboxItem key="updateInfo">
-              Change information
-            </ListboxItem>
-            <ListboxItem key="deposit">
-              Deposit
-            </ListboxItem>
-            <ListboxItem key="purchaseVIP">
-              Purchase VIP
-            </ListboxItem>
+            <ListboxItem key="changePassword">Change password</ListboxItem>
+            <ListboxItem key="updateInfo">Change information</ListboxItem>
+            <ListboxItem key="deposit">Deposit</ListboxItem>
+            <ListboxItem key="purchaseVIP">Purchase VIP</ListboxItem>
           </Listbox>
 
           <UserActionModal
