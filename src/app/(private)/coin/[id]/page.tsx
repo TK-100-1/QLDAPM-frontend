@@ -1,6 +1,7 @@
 import Container from "@/src/components/Container";
 import { fetchCoinDetail, fetchCoinHistory } from "@/src/libs/serverFetch";
 import CoinDetail from "@/src/views/coin/CoinDetail";
+import VIPUpgradeGuard from "@/src/components/VIPUpgradeGuard";
 
 interface Params {
   id: string;
@@ -26,8 +27,10 @@ export default async function Page({ params }: Props) {
   }
 
   return (
-    <Container className="py-20">
-      <CoinDetail coinDetail={coinDetail} historyData={historyData} />
+    <Container className="py-20 flex justify-center w-full">
+      <div className="w-full max-w-6xl">
+        <CoinDetail coinDetail={coinDetail} historyData={historyData} />
+      </div>
     </Container>
   );
 }
