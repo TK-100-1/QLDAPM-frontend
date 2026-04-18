@@ -10,7 +10,7 @@ import TriggerForm from "../TriggerForm";
 import SnoozeForm from "../SnoozeForm";
 import IndicatorForm from "../IndicatorForm";
 import CustomForm from "../CustomForm";
-import { useAuth } from "@/src/provider/AuthProvider";
+// import { useAuth } from "@/src/provider/AuthProvider";
 import VIPUpgradeGuard from "@/src/components/VIPUpgradeGuard";
 
 interface Props {
@@ -19,8 +19,8 @@ interface Props {
 }
 
 export default function AddAlertModal({ isOpen, onOpenChange }: Props) {
-  const { basicUserInfor } = useAuth();
-  const role = basicUserInfor.vip_role as number;
+  //   const { basicUserInfor } = useAuth();
+  //   const role = basicUserInfor.vip_role as number;
 
   return (
     <Modal

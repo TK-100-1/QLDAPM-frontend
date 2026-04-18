@@ -1,7 +1,6 @@
 import Container from "@/src/components/Container";
 import { fetchCoinDetail, fetchCoinHistory } from "@/src/libs/serverFetch";
 import CoinDetail from "@/src/views/coin/CoinDetail";
-import VIPUpgradeGuard from "@/src/components/VIPUpgradeGuard";
 
 interface Params {
   id: string;

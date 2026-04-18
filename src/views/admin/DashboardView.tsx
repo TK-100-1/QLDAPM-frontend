@@ -15,8 +15,7 @@ import {
   Legend,
   BarElement,
 } from "chart.js";
-import { Bar, Line } from "react-chartjs-2";
-import FlexBox from "@/src/components/Box/FlexBox";
+import { Bar } from "react-chartjs-2";
 import Link from "next/link";
 
 ChartJS.register(
