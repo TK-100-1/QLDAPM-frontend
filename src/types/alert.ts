@@ -31,6 +31,15 @@ export const CONDITIONTYPE = {
 } as const;
 export type ConditionType = ObjectValue<typeof CONDITIONTYPE>;
 
+export const ALERT_NOTIFICATION_OPTION = {
+    NONE: 'none',
+    SNOOZE: 'snooze',
+    INDICATOR: 'indicator',
+} as const;
+export type AlertNotificationOption = ObjectValue<
+    typeof ALERT_NOTIFICATION_OPTION
+>;
+
 export const TRIGGERTYPE = {
     SPOT: 'spot',
     FUTURE: 'future',
@@ -62,6 +71,14 @@ export type CreateTriggerPayload = {
     fundingRate: string;
     notification_method: NotificationMethod;
     triggerType: TriggerType;
+    notificationOption: AlertNotificationOption;
+    conditionType?: ConditionType;
+    startTime?: string;
+    endTime?: string;
+    indicatorType?: Indicator;
+    indicatorPeriod?: number;
+    indicatorCondition?: Condition;
+    indicatorThreshold?: number;
 };
 
 export type CreateIndicatorTriggerPayload = {

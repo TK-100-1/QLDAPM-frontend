@@ -1,15 +1,5 @@
-import {
-    Modal,
-    ModalBody,
-    ModalContent,
-    ModalHeader,
-    Tab,
-    Tabs,
-} from '@nextui-org/react';
+import { Modal, ModalBody, ModalContent, ModalHeader } from '@nextui-org/react';
 import TriggerForm from '../TriggerForm';
-import SnoozeForm from '../SnoozeForm';
-import IndicatorForm from '../IndicatorForm';
-import CustomForm from '../CustomForm';
 // import { useAuth } from "@/src/provider/AuthProvider";
 
 interface Props {
@@ -35,20 +25,7 @@ export default function AddAlertModal({ isOpen, onOpenChange }: Props) {
                     Add new alerts
                 </ModalHeader>
                 <ModalBody>
-                    <Tabs disableAnimation>
-                        <Tab key="trigger" title="Trigger">
-                            <TriggerForm />
-                        </Tab>
-                        <Tab key="snooze" title="Snooze">
-                            <SnoozeForm />
-                        </Tab>
-                        <Tab key="indicator" title="Indicator">
-                            <IndicatorForm />
-                        </Tab>
-                        <Tab key="custom" title="Custom">
-                            <CustomForm />
-                        </Tab>
-                    </Tabs>
+                    <TriggerForm />
                 </ModalBody>
             </ModalContent>
         </Modal>

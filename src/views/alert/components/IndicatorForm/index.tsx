@@ -89,6 +89,8 @@ export default function IndicatorForm() {
 
             <div className="w-full flex gap-4">
                 <Input
+                    type="number"
+                    step="1"
                     onChange={(e) => {
                         const val = e.target.value;
                         if (val === '') {
@@ -101,10 +103,13 @@ export default function IndicatorForm() {
                     }}
                     value={period === 0 ? '' : period.toString()}
                     label="Period"
-                    placeholder="14, 20, 50..."
+                    description="Number of candles (14, 20, 50...)"
+                    placeholder="Enter period"
                     radius="sm"
                 />
                 <Input
+                    type="number"
+                    step="0.0001"
                     onChange={(e) => {
                         const val = e.target.value;
                         if (val === '') {
@@ -119,6 +124,8 @@ export default function IndicatorForm() {
                         formData.price === 0 ? '' : formData.price.toString()
                     }
                     label="Threshold Value"
+                    description="Support decimal (e.g., 76000.50)"
+                    placeholder="Enter threshold value"
                     radius="sm"
                 />
                 <Select
