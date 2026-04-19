@@ -1,4 +1,3 @@
-
 # **Crypto Price & Alert System**
 
 ### **Project Overview**
@@ -12,19 +11,19 @@ This README provides a detailed description of the project, focusing on front-en
 ### **Table of Contents**
 
 - [**Crypto Price \& Alert System**](#crypto-price--alert-system)
-    - [**Project Overview**](#project-overview)
-    - [**Table of Contents**](#table-of-contents)
-    - [**Project Objectives**](#project-objectives)
-    - [**Features**](#features)
-    - [**VIP Access Levels**](#vip-access-levels)
-    - [**Technical Stack**](#technical-stack)
-    - [**API Endpoints Overview**](#api-endpoints-overview)
-    - [**Front-end Modules**](#front-end-modules)
-    - [**Setup Instructions**](#setup-instructions)
-    - [**Project Structure**](#project-structure)
-    - [**SRS Documentation**](#srs-documentation)
-    - [**Contributing**](#contributing)
-    - [**Contact**](#contact)
+  - [**Project Overview**](#project-overview)
+  - [**Table of Contents**](#table-of-contents)
+  - [**Project Objectives**](#project-objectives)
+  - [**Features**](#features)
+  - [**VIP Access Levels**](#vip-access-levels)
+  - [**Technical Stack**](#technical-stack)
+  - [**API Endpoints Overview**](#api-endpoints-overview)
+  - [**Front-end Modules**](#front-end-modules)
+  - [**Setup Instructions**](#setup-instructions)
+  - [**Project Structure**](#project-structure)
+  - [**SRS Documentation**](#srs-documentation)
+  - [**Contributing**](#contributing)
+  - [**Contact**](#contact)
 
 ---
 
@@ -125,11 +124,13 @@ The Front-end team is responsible for the following modules:
 Follow these instructions to set up the development environment:
 
 1. **Clone the repository**:
+
    ```bash
    git clone https://github.com/dath-241/coin-price-web.git
    ```
 
 2. **Navigate into the project directory**:
+
    ```bash
    cd dev_frontend
    ```
@@ -139,7 +140,6 @@ Follow these instructions to set up the development environment:
      ```bash
      //This feature will be updated later
      ```
-     
 4. **Start the development server**:
    - For Frontend:
      ```bash
@@ -157,13 +157,13 @@ coin-price-web/
 ├── Design/
 │   ├── Mockups/
 │   └── Usecase Diagram/
-│  
+│
 ├── Documents/
 │   ├── System Requirement Specification/
 │   ├── API Specs (Samples API for Module Backend)/
 │   └── References/
 │
-├── Meeting Minutes/   
+├── Meeting Minutes/
 │
 ├── public/ #Các tài nguyên tĩnh (hình ảnh, fonts, v.v.) sẽ được phục vụ trực tiếp
 │
@@ -242,15 +242,7 @@ For more details, please refer to the **Contributing Guide**.
 
 Team Members: **Note that the Student ID will not be appear again in Meeting Minutes Reports**
 
-| Họ và Tên           | Mã Số Sinh Viên |         Roles         |
-|---------------------|-----------------|-----------------------|
-| Bùi Thế Kỷ Cương    | 2210412         |  PO                   |
-| Phan Duệ Triết      | 2212609         |  Dev                  |
-| Tống Xuân Lộc       | 2211934         |  Dev                  |
-| Ngô Quang Bách      | 2110770         |  Dev                  |    
-| Thái Kim Long       | 2211899         |  Dev                  |
-| Trần Ngọc Lâm Vỹ    | 2214061         |  Scrum Master & Dev   |
-
-
+| Họ và Tên | Mã Số Sinh Viên | Roles |
+| --------- | --------------- | ----- |
 
 ---

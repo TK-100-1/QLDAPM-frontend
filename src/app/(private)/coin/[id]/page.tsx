@@ -26,8 +26,10 @@ export default async function Page({ params }: Props) {
   }
 
   return (
-    <Container className="py-20">
-      <CoinDetail coinDetail={coinDetail} historyData={historyData} />
+    <Container className="py-20 flex justify-center w-full">
+      <div className="w-full max-w-6xl">
+        <CoinDetail coinDetail={coinDetail} historyData={historyData} />
+      </div>
     </Container>
   );
 }
