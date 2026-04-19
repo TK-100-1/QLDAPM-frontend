@@ -119,7 +119,6 @@ export async function fetchAlerts() {
     const cookieStore = cookies();
     const token = cookieStore.get('token')?.value;
     const vip2Url = `${BaseUrl}/vip2/alerts`;
-    const vip3Url = `${BaseUrl}/vip3/indicators`;
 
     const triggerList: TriggerConditionData[] = [];
     const snoozeList: SnoozeAlertData[] = [];
@@ -139,6 +138,10 @@ export async function fetchAlerts() {
             const triggerType =
                 item.triggerType || item.trigger_type || item.type || '';
             const isSnooze = Boolean(item.snooze_condition);
+            const isIndicator =
+                item.notification_option === 'indicator' ||
+                Boolean(item.indicator) ||
+                Number(item.indicator_period || 0) > 0;
 
             if (isSnooze) {
                 snoozeList.push({
@@ -152,6 +155,28 @@ export async function fetchAlerts() {
                         typeof item.is_active === 'boolean'
                             ? item.is_active
                             : true,
+                    notification_method: item.notification_method || 'telegram',
+                });
+                continue;
+            }
+
+            if (isIndicator) {
+                indicatorList.push({
+                    ...item,
+                    alert_id: item._id,
+                    triggerType: (item.trigger_type ||
+                        item.triggerType ||
+                        'indicator') as any,
+                    condition: (item.indicator_condition ||
+                        item.condition ||
+                        '=') as any,
+                    value:
+                        item.indicator_threshold ||
+                        item.threshold ||
+                        item.price ||
+                        0,
+                    indicator: item.indicator || null,
+                    period: item.indicator_period || item.period || 0,
                     notification_method: item.notification_method || 'telegram',
                 });
                 continue;
@@ -172,33 +197,6 @@ export async function fetchAlerts() {
     } catch (error: any) {
         console.error(
             '[fetchAlerts] VIP-2 fetch failed:',
-            error?.response?.data || error,
-        );
-    }
-
-    // Fetch indicator alerts from VIP-3 endpoint
-    try {
-        const res = await axios.get(vip3Url, {
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: token,
-            },
-        });
-
-        const list: any[] = res.data;
-        for (const item of list) {
-            indicatorList.push({
-                ...item,
-                alert_id: item._id,
-                triggerType: 'indicator',
-                value: item.threshold || 0,
-                indicator: item.indicator || null,
-                period: item.period || 0,
-            });
-        }
-    } catch (error: any) {
-        console.error(
-            '[fetchAlerts] VIP-3 fetch failed:',
             error?.response?.data || error,
         );
     }

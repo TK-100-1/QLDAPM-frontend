@@ -3,6 +3,7 @@
 import axios from 'axios';
 import { BaseUrl, customHeader } from '..';
 import {
+    ALERT_NOTIFICATION_OPTION,
     CreateIndicatorTriggerPayload,
     CreateSnoozePayload,
     CreateTriggerPayload,
@@ -113,6 +114,15 @@ export async function CreateTriggerAlert(payload: CreateTriggerPayload) {
     const cookieStore = cookies();
     const token = cookieStore.get('token')?.value;
     const url = `${BaseUrl}/vip2/alerts`;
+    const backendSnoozeCondition = payload.conditionType
+        ? toBackendSnoozeCondition(payload.conditionType)
+        : '';
+    const maxRepeatCount =
+        payload.conditionType === 'ONE_TIME'
+            ? 1
+            : payload.conditionType === 'FOREVER'
+              ? 0
+              : 5;
 
     try {
         const res = await axios.post(
@@ -127,6 +137,47 @@ export async function CreateTriggerAlert(payload: CreateTriggerPayload) {
                 price: payload.price,
                 fundingRate: payload.fundingRate,
                 threshold: payload.price,
+                notification_option: payload.notificationOption,
+                snooze_condition:
+                    payload.notificationOption ===
+                    ALERT_NOTIFICATION_OPTION.SNOOZE
+                        ? backendSnoozeCondition
+                        : '',
+                start_time:
+                    payload.notificationOption ===
+                    ALERT_NOTIFICATION_OPTION.SNOOZE
+                        ? payload.startTime
+                        : null,
+                end_time:
+                    payload.notificationOption ===
+                    ALERT_NOTIFICATION_OPTION.SNOOZE
+                        ? payload.endTime
+                        : null,
+                max_repeat_count:
+                    payload.notificationOption ===
+                    ALERT_NOTIFICATION_OPTION.SNOOZE
+                        ? maxRepeatCount
+                        : 0,
+                indicator:
+                    payload.notificationOption ===
+                    ALERT_NOTIFICATION_OPTION.INDICATOR
+                        ? payload.indicatorType
+                        : '',
+                indicator_period:
+                    payload.notificationOption ===
+                    ALERT_NOTIFICATION_OPTION.INDICATOR
+                        ? payload.indicatorPeriod || 0
+                        : 0,
+                indicator_condition:
+                    payload.notificationOption ===
+                    ALERT_NOTIFICATION_OPTION.INDICATOR
+                        ? payload.indicatorCondition
+                        : '',
+                indicator_threshold:
+                    payload.notificationOption ===
+                    ALERT_NOTIFICATION_OPTION.INDICATOR
+                        ? payload.indicatorThreshold || 0
+                        : 0,
             },
             {
                 headers: customHeader(token),
@@ -270,6 +321,15 @@ export async function UpdateTrigger(
     const cookieStore = cookies();
     const token = cookieStore.get('token')?.value;
     const url = `${BaseUrl}/vip2/alerts/${payload.id}`;
+    const backendSnoozeCondition = payload.conditionType
+        ? toBackendSnoozeCondition(payload.conditionType)
+        : '';
+    const maxRepeatCount =
+        payload.conditionType === 'ONE_TIME'
+            ? 1
+            : payload.conditionType === 'FOREVER'
+              ? 0
+              : 5;
 
     try {
         const res = await axios.put(
@@ -284,6 +344,47 @@ export async function UpdateTrigger(
                 price: payload.price,
                 fundingRate: payload.fundingRate,
                 threshold: payload.price,
+                notification_option: payload.notificationOption,
+                snooze_condition:
+                    payload.notificationOption ===
+                    ALERT_NOTIFICATION_OPTION.SNOOZE
+                        ? backendSnoozeCondition
+                        : '',
+                start_time:
+                    payload.notificationOption ===
+                    ALERT_NOTIFICATION_OPTION.SNOOZE
+                        ? payload.startTime
+                        : null,
+                end_time:
+                    payload.notificationOption ===
+                    ALERT_NOTIFICATION_OPTION.SNOOZE
+                        ? payload.endTime
+                        : null,
+                max_repeat_count:
+                    payload.notificationOption ===
+                    ALERT_NOTIFICATION_OPTION.SNOOZE
+                        ? maxRepeatCount
+                        : 0,
+                indicator:
+                    payload.notificationOption ===
+                    ALERT_NOTIFICATION_OPTION.INDICATOR
+                        ? payload.indicatorType
+                        : '',
+                indicator_period:
+                    payload.notificationOption ===
+                    ALERT_NOTIFICATION_OPTION.INDICATOR
+                        ? payload.indicatorPeriod || 0
+                        : 0,
+                indicator_condition:
+                    payload.notificationOption ===
+                    ALERT_NOTIFICATION_OPTION.INDICATOR
+                        ? payload.indicatorCondition
+                        : '',
+                indicator_threshold:
+                    payload.notificationOption ===
+                    ALERT_NOTIFICATION_OPTION.INDICATOR
+                        ? payload.indicatorThreshold || 0
+                        : 0,
             },
             {
                 headers: customHeader(token),
@@ -310,7 +411,7 @@ export async function UpdateTrigger(
 export async function DeleteIndicatorTrigger(payload: { id: string }) {
     const cookieStore = cookies();
     const token = cookieStore.get('token')?.value;
-    const url = `${BaseUrl}/vip3/indicators/${payload.id}`;
+    const url = `${BaseUrl}/vip2/alerts/${payload.id}`;
 
     try {
         const res = await axios.delete(url, {

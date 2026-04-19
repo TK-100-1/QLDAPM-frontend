@@ -3,6 +3,7 @@ import { H1, H3 } from '@/src/components/Heading';
 import { DeleteTrigger, UpdateTrigger } from '@/src/libs/serverAction/alert';
 import { refreshToken } from '@/src/libs/serverAction/auth';
 import {
+    ALERT_NOTIFICATION_OPTION,
     TriggerConditionData,
     CONDITION,
     Condition,
@@ -111,6 +112,7 @@ export default function TriggerModal({
             fundingRate: '', // You might need to handle this based on trigger type
             notification_method: editFormData.notification_method,
             triggerType: editFormData.triggerType,
+            notificationOption: ALERT_NOTIFICATION_OPTION.NONE,
         });
 
         if (res.success) {
