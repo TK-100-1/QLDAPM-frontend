@@ -304,7 +304,9 @@ export default function UsersView({ initialUsers }: Props) {
               <TableCell>
                 <div className="flex items-center gap-2 text-default-500 text-sm">
                   <CalendarBlank />
-                  {new Date(user.created_at).toISOString().split("T")[0]}
+                  {user.created_at
+                    ? new Date(user.created_at).toISOString().split("T")[0]
+                    : "N/A"}
                 </div>
               </TableCell>
               <TableCell>
