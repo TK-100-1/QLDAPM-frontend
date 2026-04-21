@@ -22,34 +22,65 @@ import { useRouter } from 'next/navigation';
 export default function PrivateNavbar() {
     const router = useRouter();
     const { basicUserInfor } = useAuth();
-    console.log(basicUserInfor);
+    console.log("basicUserInfor", basicUserInfor);
     const { isOpen, onOpenChange } = useDisclosure();
 
     const avatarUrl = basicUserInfor?.avatar
         ? `${ServerUrl}${basicUserInfor.avatar}`
         : '/user.svg';
     return (
-        <Navbar maxWidth="full" className="fixed bg-white shadow-sm">
+        <Navbar maxWidth="full" className="sticky top-0 z-50 bg-white shadow-sm">
             <NavbarContent className="hidden sm:flex gap-10" justify="start">
-                <NavbarItem>
-                    <Logo className="w-32 h-[42px]" />
-                </NavbarItem>
-                <NavbarItem>
-                    <Link
-                        href="/market"
-                        className="text-lg font-medium hover:underline hover:underline-offset-4"
-                    >
-                        Market
-                    </Link>
-                </NavbarItem>
-                <NavbarItem>
-                    <Link
-                        href="/alerts"
-                        className="text-lg font-medium hover:underline hover:underline-offset-4"
-                    >
-                        Alerts
-                    </Link>
-                </NavbarItem>
+                {basicUserInfor?.vip_level === 'Admin' ? (
+                    <>
+                        <NavbarItem>
+                            <Link
+                                href="/admin/dashboard"
+                                className="text-lg font-medium hover:underline hover:underline-offset-4"
+                            >
+                                Dashboard
+                            </Link>
+                        </NavbarItem>
+                        <NavbarItem>
+                            <Link
+                                href="/admin/alerts"
+                                className="text-lg font-medium hover:underline hover:underline-offset-4"
+                            >
+                                Management Alerts
+                            </Link>
+                        </NavbarItem>
+                        <NavbarItem>
+                            <Link
+                                href="/admin/market"
+                                className="text-lg font-medium hover:underline hover:underline-offset-4"
+                            >
+                                Management Market
+                            </Link>
+                        </NavbarItem>
+                    </>
+                ) : (
+                    <>
+                        <NavbarItem>
+                            <Logo className="w-32 h-[42px]" />
+                        </NavbarItem>
+                        <NavbarItem>
+                            <Link
+                                href="/market"
+                                className="text-lg font-medium hover:underline hover:underline-offset-4"
+                            >
+                                Market
+                            </Link>
+                        </NavbarItem>
+                        <NavbarItem>
+                            <Link
+                                href="/alerts"
+                                className="text-lg font-medium hover:underline hover:underline-offset-4"
+                            >
+                                Alerts
+                            </Link>
+                        </NavbarItem>
+                    </>
+                )}
             </NavbarContent>
             <NavbarContent className="hidden sm:flex gap-4" justify="end">
                 <Dropdown>
