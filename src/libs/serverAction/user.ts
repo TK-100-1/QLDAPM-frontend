@@ -193,25 +193,27 @@ export async function deposit(payload: DepositCoinPayload) {
     }
 }
 
-export async function purchaseVIP(payload: PurchaseVIPPayload) {
+export async function purchaseVIP(payload: { role_name: string }) {
     const cookieStore = cookies();
     const token = cookieStore.get('token')?.value;
-    const url = `${BaseUrl}/payment/vip-upgrade`; // Updated based on backend routes
+    const url = `${BaseUrl}/payment/vip-upgrade`;
 
     try {
         const res = await axios.post(
-            // Changed to POST based on backend routes (setupAdminRoutes line 47)
             url,
-            { vipLevel: payload.vipLevel },
+            { role_name: payload.role_name },
             {
                 headers: customHeader(token),
             },
         );
         return {
             success: true,
-            message: res.data.message,
+            message: res.data.message || 'Payment created',
             status: res.status,
-            data: null,
+            data: {
+                payment_url: res.data.payment_url,
+                order_id: res.data.order_id,
+            },
         };
     } catch (error: any) {
         console.error(error);
@@ -223,6 +225,35 @@ export async function purchaseVIP(payload: PurchaseVIPPayload) {
                 'Something went wrong',
             status: error.status,
             data: null,
+        };
+    }
+}
+
+export async function fetchAvailableRoles() {
+    const cookieStore = cookies();
+    const token = cookieStore.get('token')?.value;
+    const url = `${BaseUrl}/payment/roles`;
+
+    try {
+        const res = await axios.get(
+            url,
+            {
+                headers: customHeader(token),
+            },
+        );
+        return {
+            success: true,
+            message: '',
+            status: res.status,
+            data: res.data.data || [],
+        };
+    } catch (error: any) {
+        console.error(error);
+        return {
+            success: false,
+            message: 'Failed to fetch roles',
+            status: error.status,
+            data: [],
         };
     }
 }

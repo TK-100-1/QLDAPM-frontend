@@ -57,6 +57,22 @@ export default function PrivateNavbar() {
                                 Management Market
                             </Link>
                         </NavbarItem>
+                        <NavbarItem>
+                            <Link
+                                href="/admin/users"
+                                className="text-lg font-medium hover:underline hover:underline-offset-4"
+                            >
+                                Users
+                            </Link>
+                        </NavbarItem>
+                        <NavbarItem>
+                            <Link
+                                href="/admin/roles"
+                                className="text-lg font-medium hover:underline hover:underline-offset-4"
+                            >
+                                Roles
+                            </Link>
+                        </NavbarItem>
                     </>
                 ) : (
                     <>
