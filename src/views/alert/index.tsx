@@ -2,38 +2,16 @@
 import { Button, Divider, Spacer, useDisclosure } from '@nextui-org/react';
 import { Plus } from '@phosphor-icons/react';
 import AddAlertModal from './components/AddAlertModal';
-import {
-    IndicatorTrigerData,
-    SnoozeAlertData,
-    TriggerConditionData,
-} from '@/src/types/alert';
+import { TriggerConditionData } from '@/src/types/alert';
 import TriggerList from './components/TriggerList';
 import { H1 } from '@/src/components/Heading';
-import IndicatorList from './components/IndicatorList';
-import SnoozeList from './components/SnoozeList';
-import { useState } from 'react';
-// import { useAuth } from "@/src/provider/AuthProvider";
-// import FlexBox from "@/src/components/Box/FlexBox";
-// import Link from "next/link";
 
 interface Props {
     triggerList: TriggerConditionData[];
-    snoozeList: SnoozeAlertData[];
-    indicatorList: IndicatorTrigerData[];
 }
 
-export default function Alerts({
-    triggerList,
-    snoozeList,
-    indicatorList,
-}: Props) {
+export default function Alerts({ triggerList }: Props) {
     const { isOpen, onOpenChange } = useDisclosure();
-    const [isTriggerEditing, setIsTriggerEditing] = useState(false);
-    const [isSnoozeEditing, setIsSnoozeEditing] = useState(false);
-    const [isIndicatorEditing, setIsIndicatorEditing] = useState(false);
-
-    const isAnyEditing =
-        isTriggerEditing || isSnoozeEditing || isIndicatorEditing;
 
     return (
         <div className="w-8/12 h-full flex flex-col gap-4 pt-10">
@@ -46,7 +24,7 @@ export default function Alerts({
                     onClick={() => onOpenChange()}
                     color="primary"
                     className="font-medium"
-                    isDisabled={isAnyEditing}
+                    // isDisabled={isAnyEditing}
                 >
                     Add alert
                 </Button>
@@ -55,20 +33,9 @@ export default function Alerts({
             <H1>Trigger Alerts</H1>
             <TriggerList
                 triggerList={triggerList}
-                onEditingChange={setIsTriggerEditing}
+                // onEditingChange={setIsTriggerEditing}
             />
             <Spacer y={2} />
-            <H1>Snooze Alerts</H1>
-            <SnoozeList
-                snoozeList={snoozeList}
-                onEditingChange={setIsSnoozeEditing}
-            />
-            <Spacer y={2} />
-            <H1>Indicator Alerts</H1>
-            <IndicatorList
-                indicatorList={indicatorList}
-                onEditingChange={setIsIndicatorEditing}
-            />
         </div>
     );
 }

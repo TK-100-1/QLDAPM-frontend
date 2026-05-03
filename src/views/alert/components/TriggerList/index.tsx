@@ -51,9 +51,14 @@ export default function TriggerList({ triggerList, onEditingChange }: Props) {
     );
 
     const renderCell = useCallback((user: any, columnKey: ColumnKey) => {
-        const cellValue = user[columnKey];
+        const cellValue =
+            columnKey === 'notification_method'
+                ? user.notification_method || user.notification?.method || ''
+                : user[columnKey];
 
         switch (columnKey) {
+            case 'notification_method':
+                return cellValue === 'email' ? 'email' : cellValue || 'email';
             default:
                 return cellValue;
         }
@@ -82,8 +87,8 @@ export default function TriggerList({ triggerList, onEditingChange }: Props) {
                     )}
                 </TableHeader>
                 <TableBody
+                    items={triggerList || []}
                     emptyContent={'No alerts to display.'}
-                    items={triggerList}
                 >
                     {(trigger) => (
                         <TableRow
@@ -94,7 +99,7 @@ export default function TriggerList({ triggerList, onEditingChange }: Props) {
                                 }
                             }}
                             className={`cursor-pointer hover:bg-neutral-200 ${isAnyEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            key={trigger.alert_id}
+                            key={trigger.alert_id || trigger.id}
                         >
                             {(columnKey) => (
                                 <TableCell>
@@ -112,12 +117,7 @@ export default function TriggerList({ triggerList, onEditingChange }: Props) {
     );
 }
 
-type ColumnKey =
-    | 'symbol'
-    | 'condition'
-    | 'notification_method'
-    | 'spotPriceThreshold'
-    | 'triggerType';
+type ColumnKey = 'symbol' | 'notification_method' | 'triggerType' | 'status';
 
 type Column = {
     key: ColumnKey;
@@ -128,15 +128,10 @@ type Column = {
 const columns: Column[] = [
     { key: 'symbol', label: 'Symbol', align: 'start' },
     { key: 'triggerType', label: 'Trigger Type', align: 'center' },
-    { key: 'condition', label: 'Condition', align: 'center' },
-    {
-        key: 'spotPriceThreshold',
-        label: 'Spot Price Threshold',
-        align: 'center',
-    },
     {
         key: 'notification_method',
         label: 'Notification Method',
         align: 'center',
     },
+    { key: 'status', label: 'Status', align: 'center' },
 ];
