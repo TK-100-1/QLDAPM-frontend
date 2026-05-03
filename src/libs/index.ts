@@ -1,5 +1,5 @@
 export const BaseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL || 'https://a2-price.thuanle.me';
+    process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
 export const ServerUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 // export function customHeader(token: string | null | undefined) {
