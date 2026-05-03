@@ -1,59 +1,34 @@
-import {
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalHeader,
-  Tab,
-  Tabs,
-} from "@nextui-org/react";
-import TriggerForm from "../TriggerForm";
-import SnoozeForm from "../SnoozeForm";
-import IndicatorForm from "../IndicatorForm";
-import CustomForm from "../CustomForm";
+import { Modal, ModalBody, ModalContent, ModalHeader } from '@nextui-org/react';
+import TriggerForm from '../TriggerForm';
 // import { useAuth } from "@/src/provider/AuthProvider";
-import VIPUpgradeGuard from "@/src/components/VIPUpgradeGuard";
+// import VIPUpgradeGuard from '@/src/components/VIPUpgradeGuard';
 
 interface Props {
-  isOpen: boolean;
-  onOpenChange: () => void;
+    isOpen: boolean;
+    onOpenChange: () => void;
 }
 
 export default function AddAlertModal({ isOpen, onOpenChange }: Props) {
-  //   const { basicUserInfor } = useAuth();
-  //   const role = basicUserInfor.vip_role as number;
+    //   const { basicUserInfor } = useAuth();
+    //   const role = basicUserInfor.vip_role as number;
 
-  return (
-    <Modal
-      disableAnimation
-      size="xl"
-      radius="sm"
-      placement="center"
-      isOpen={isOpen}
-      onOpenChange={onOpenChange}
-    >
-      <ModalContent>
-        <ModalHeader className="flex flex-col gap-1 text-3xl font-bold">
-          Add new alerts
-        </ModalHeader>
-        <ModalBody>
-          <Tabs disableAnimation>
-            <Tab key="trigger" title="Trigger">
-              <TriggerForm />
-            </Tab>
-            <Tab key="snooze" title="Snooze">
-              <SnoozeForm />
-            </Tab>
-            <Tab key="indicator" title="Indicator">
-              <VIPUpgradeGuard allowedRoles={["VIP-3", "Admin"]}>
-                <IndicatorForm />
-              </VIPUpgradeGuard>
-            </Tab>
-            <Tab key="custom" title="Custom">
-              <CustomForm />
-            </Tab>
-          </Tabs>
-        </ModalBody>
-      </ModalContent>
-    </Modal>
-  );
+    return (
+        <Modal
+            disableAnimation
+            size="xl"
+            radius="sm"
+            placement="center"
+            isOpen={isOpen}
+            onOpenChange={onOpenChange}
+        >
+            <ModalContent>
+                <ModalHeader className="flex flex-col gap-1 text-3xl font-bold">
+                    Add new alert
+                </ModalHeader>
+                <ModalBody>
+                    <TriggerForm />
+                </ModalBody>
+            </ModalContent>
+        </Modal>
+    );
 }

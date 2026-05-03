@@ -3,20 +3,23 @@
 import Form from '@/src/components/Form';
 import CoinSymbolSelect from '../CoinSymbolSelect';
 import { CreateTriggerAlert } from '@/src/libs/serverAction/alert';
-import { refreshToken } from '@/src/libs/serverAction/auth';
 import {
-    ALERT_NOTIFICATION_OPTION,
-    CONDITION,
-    Condition,
-    CONDITIONTYPE,
-    ConditionType,
+    OPERATOR,
+    CONDITION_MODE,
+    ALERT_TRIGGER_STRATEGY,
+    TriggerConditionNode,
+    TriggerConditionTree,
     CreateTriggerPayload,
-    Indicator,
-    INDICATOR,
+    LOGIC_TYPE,
     NOTIFICATION_METHOD,
-    NotificationMethod,
-    TRIGGERTYPE,
     TriggerType,
+    TRIGGER_TYPE,
+    ConditionMode,
+    TriggerFormState,
+    LogicType,
+    Operator,
+    AlertTriggerStrategy,
+    NotificationMethod,
 } from '@/src/types/alert';
 import {
     Button,
@@ -30,107 +33,263 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { parseDateTime } from '@internationalized/date';
 
-const defaultFormData: CreateTriggerPayload = {
+const defaultFormData: TriggerFormState = {
+    // ?? basic
     symbol: '',
-    condition: CONDITION.EQUAL,
+
+    // ?? PRIMARY CONDITION
+    operator: OPERATOR.GREATER_THAN,
+    conditionMode: CONDITION_MODE.STATIC,
+
     price: 0,
-    fundingRate: '',
-    notification_method: NOTIFICATION_METHOD.TELEGRAM,
-    triggerType: TRIGGERTYPE.SPOT,
-    notificationOption: ALERT_NOTIFICATION_OPTION.NONE,
-    conditionType: CONDITIONTYPE.ONCE_IN_DURATION,
-    startTime: new Date().toISOString().split('.')[0],
-    endTime: new Date().toISOString().split('.')[0],
-    indicatorType: INDICATOR.EMA,
-    indicatorPeriod: 14,
-    indicatorCondition: CONDITION.EQUAL,
-    indicatorThreshold: 0,
+    fundingRate: 0,
+    metric: 'price',
+    triggerType: TRIGGER_TYPE.SPOT,
+    // ?? MULTI CONDITIONS
+    enableSecondary: false,
+    enableThird: false,
+
+    secondaryCondition: {
+        metric: 'price',
+        operator: '>',
+        mode: 'static',
+        value: 0,
+        triggerType: TRIGGER_TYPE.SPOT,
+    },
+
+    thirdCondition: {
+        metric: 'price',
+        operator: '>',
+        mode: 'static',
+        value: 0,
+        triggerType: TRIGGER_TYPE.SPOT,
+    },
+
+    // ?? LOGIC
+    logicType: LOGIC_TYPE.AND,
+    nestedInnerLogic: LOGIC_TYPE.AND,
+    nestedOuterLogic: LOGIC_TYPE.AND,
+
+    // ?? EXECUTION
+    cooldownSeconds: 30,
+    dedupeWindowSeconds: 30,
+    minConfirmations: 1,
+
+    // ?? SNOOZE
+    timeWindow: {
+        start: null,
+        end: null,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    },
+
+    alertTriggerStrategy: ALERT_TRIGGER_STRATEGY.ONCE_IN_DURATION,
+
+    // ?? NOTIFICATION
+    notificationMethod: NOTIFICATION_METHOD.EMAIL,
 };
+
+function safeParseDateTime(value?: string | null) {
+    if (!value) return null;
+
+    try {
+        return parseDateTime(value);
+    } catch {
+        return null;
+    }
+}
 
 export default function TriggerForm() {
     const router = useRouter();
 
-    const [formData, setFormData] =
-        useState<CreateTriggerPayload>(defaultFormData);
+    const [formData, setFormData] = useState<TriggerFormState>(defaultFormData);
+    const [enableSecondaryCondition, setEnableSecondaryCondition] =
+        useState(false);
+    const [secondaryCondition, setSecondaryCondition] =
+        useState<TriggerConditionNode>(getDefaultConditionNode());
+    const [enableThirdCondition, setEnableThirdCondition] = useState(false);
+    const [thirdCondition, setThirdCondition] = useState<TriggerConditionNode>(
+        getDefaultConditionNode(),
+    );
+    const [nestedInnerLogic, setNestedInnerLogic] = useState<LogicType>(
+        LOGIC_TYPE.AND,
+    );
+    const [nestedOuterLogic, setNestedOuterLogic] = useState<LogicType>(
+        LOGIC_TYPE.OR,
+    );
 
-    const onChangeForm = (change: Partial<CreateTriggerPayload>) => {
+    const onChangeForm = (change: Partial<TriggerFormState>) => {
         setFormData((prev) => ({ ...prev, ...change }));
     };
 
     const isPriceType =
-        formData.triggerType === TRIGGERTYPE.SPOT ||
-        formData.triggerType === TRIGGERTYPE.FUTURE ||
-        formData.triggerType === TRIGGERTYPE.PRICE_DIFF;
+        formData.triggerType === TRIGGER_TYPE.SPOT ||
+        formData.triggerType === TRIGGER_TYPE.FUTURE ||
+        formData.triggerType === TRIGGER_TYPE.PRICE_DIFF;
 
-    const isFundingType = formData.triggerType === TRIGGERTYPE.FUNDING_RATE;
-    const isSnoozeSelected =
-        formData.notificationOption === ALERT_NOTIFICATION_OPTION.SNOOZE;
-    const isIndicatorSelected =
-        formData.notificationOption === ALERT_NOTIFICATION_OPTION.INDICATOR;
+    const isFundingType = formData.triggerType === TRIGGER_TYPE.FUNDING_RATE;
+
+    const conditionModeOptions: Array<{ key: ConditionMode; label: string }> = [
+        { key: CONDITION_MODE.STATIC, label: 'Static threshold' },
+        { key: CONDITION_MODE.CROSS_ABOVE, label: 'Cross above' },
+        { key: CONDITION_MODE.CROSS_BELOW, label: 'Cross below' },
+        { key: CONDITION_MODE.CHANGE_UP, label: 'Change up' },
+        { key: CONDITION_MODE.CHANGE_DOWN, label: 'Change down' },
+    ];
+
+    function getDefaultConditionNode(): TriggerConditionNode {
+        return {
+            metric: 'price',
+            operator: '>',
+            mode: 'static',
+            triggerType: TRIGGER_TYPE.SPOT,
+            value: 0,
+        };
+    }
+
+    const buildPrimaryCondition = (): TriggerConditionNode => {
+        return {
+            metric: formData.metric,
+            triggerType: formData.triggerType,
+            operator: formData.operator || '>',
+            mode: formData.conditionMode || 'static',
+            value: isFundingType
+                ? Number(formData.fundingRate) || 0
+                : Number(formData.price) || 0,
+        };
+    };
+
+    const buildConditions = (): TriggerConditionNode[] => {
+        const result: TriggerConditionNode[] = [];
+
+        result.push(buildPrimaryCondition());
+
+        if (enableSecondaryCondition) {
+            result.push(secondaryCondition);
+        }
+
+        if (enableThirdCondition) {
+            result.push(thirdCondition);
+        }
+
+        return result;
+    };
+
+    const buildConditionTree = (
+        conditions: TriggerConditionNode[],
+    ): TriggerConditionTree | undefined => {
+        if (conditions.length === 0) return undefined;
+
+        if (conditions.length === 1) {
+            return {
+                type: 'condition',
+                condition: conditions[0],
+            };
+        }
+
+        if (conditions.length === 2 || !enableThirdCondition) {
+            return {
+                type: 'group',
+                logic: formData.logicType || LOGIC_TYPE.AND,
+                children: conditions.slice(0, 2).map((c) => ({
+                    type: 'condition',
+                    condition: c,
+                })),
+            };
+        }
+
+        return {
+            type: 'group',
+            logic: nestedOuterLogic,
+            children: [
+                {
+                    type: 'group',
+                    logic: nestedInnerLogic,
+                    children: conditions.slice(0, 2).map((c) => ({
+                        type: 'condition',
+                        condition: c,
+                    })),
+                },
+                {
+                    type: 'condition',
+                    condition: conditions[2],
+                },
+            ],
+        };
+    };
+
+    const mapStrategyToExecution = (strategy: AlertTriggerStrategy) => {
+        switch (strategy) {
+            case 'ONE_TIME':
+                return { max_triggers: 1 };
+
+            case 'FOREVER':
+                return { max_triggers: 0 };
+
+            case 'ONCE_IN_DURATION':
+                return { max_triggers: 1 };
+
+            case 'REPEAT_N_TIMES':
+                return { max_triggers: 5 }; // hoặc input user
+
+            case 'AT_SPECIFIC_TIME':
+                return { max_triggers: 1 };
+
+            default:
+                return { max_triggers: 10 };
+        }
+    };
 
     const onSubmit = async () => {
-        if (formData.symbol === '') {
+        if (!formData.symbol) {
             toast.error('Please select a coin');
             return;
         }
 
-        if (
-            isSnoozeSelected &&
-            (!formData.startTime ||
-                !formData.endTime ||
-                !formData.conditionType)
-        ) {
-            toast.error('Please fill all snooze fields');
+        const conditions = buildConditions();
+        const conditionTree = buildConditionTree(conditions);
+
+        if (conditions.length === 0) {
+            toast.error('At least one condition required');
             return;
         }
 
-        if (isIndicatorSelected) {
-            if (!formData.indicatorType || !formData.indicatorPeriod) {
-                toast.error('Please fill indicator type and period');
-                return;
-            }
-
-            if (!formData.indicatorThreshold) {
-                toast.error('Indicator threshold is required');
+        for (const c of conditions) {
+            if (c.mode === 'static' && c.value === undefined) {
+                toast.error('Value required');
                 return;
             }
         }
-
-        if (isFundingType) {
-            if (!formData.fundingRate) {
-                toast.error('Funding rate is required');
-                return;
-            }
-        } else {
-            if (!formData.price) {
-                toast.error('Price is required');
-                return;
-            }
-        }
-
-        await refreshToken();
 
         const payload: CreateTriggerPayload = {
-            ...formData,
-            price: isPriceType ? parseFloat(formData.price as any) || 0 : 0,
-            fundingRate: isFundingType ? formData.fundingRate : '',
-            conditionType: isSnoozeSelected
-                ? formData.conditionType
-                : undefined,
-            startTime: isSnoozeSelected ? formData.startTime : undefined,
-            endTime: isSnoozeSelected ? formData.endTime : undefined,
-            indicatorType: isIndicatorSelected
-                ? formData.indicatorType
-                : undefined,
-            indicatorPeriod: isIndicatorSelected
-                ? Number(formData.indicatorPeriod) || 0
-                : undefined,
-            indicatorCondition: isIndicatorSelected
-                ? formData.indicatorCondition
-                : undefined,
-            indicatorThreshold: isIndicatorSelected
-                ? Number(formData.indicatorThreshold) || 0
-                : undefined,
+            symbol: formData.symbol,
+            triggerType: formData.triggerType,
+
+            conditions,
+            conditionTree,
+
+            cooldownSeconds: Number(formData.cooldownSeconds) || 0,
+            dedupeWindowSeconds: Number(formData.dedupeWindowSeconds) || 30,
+            minConfirmations: Math.max(
+                1,
+                Number(formData.minConfirmations) || 1,
+            ),
+
+            notification: {
+                method: formData.notificationMethod,
+            },
+
+            maxTriggers: mapStrategyToExecution(
+                formData.alertTriggerStrategy ||
+                    ALERT_TRIGGER_STRATEGY.ONCE_IN_DURATION,
+            ).max_triggers,
+        };
+
+        payload.timeWindow = {
+            start: formData.timeWindow?.start ?? null,
+            end: formData.timeWindow?.end ?? null,
+            timezone:
+                formData.timeWindow?.timezone ||
+                Intl.DateTimeFormat().resolvedOptions().timeZone,
         };
 
         const res = await CreateTriggerAlert(payload);
@@ -138,6 +297,10 @@ export default function TriggerForm() {
         if (res.success) {
             toast.success(res.message);
             setFormData(defaultFormData);
+            setEnableSecondaryCondition(false);
+            setEnableThirdCondition(false);
+            setSecondaryCondition(getDefaultConditionNode());
+            setThirdCondition(getDefaultConditionNode());
             router.refresh();
         } else {
             toast.error(res.message);
@@ -162,19 +325,19 @@ export default function TriggerForm() {
                     onChangeForm({
                         triggerType: type,
                         price: 0,
-                        fundingRate: '',
+                        fundingRate: 0,
                     });
                 }}
                 selectedKeys={[formData.triggerType]}
                 label="Trigger Type"
                 radius="sm"
             >
-                <SelectItem key={TRIGGERTYPE.SPOT}>Spot</SelectItem>
-                <SelectItem key={TRIGGERTYPE.FUTURE}>Future</SelectItem>
-                <SelectItem key={TRIGGERTYPE.PRICE_DIFF}>
+                <SelectItem key={TRIGGER_TYPE.SPOT}>Spot</SelectItem>
+                <SelectItem key={TRIGGER_TYPE.FUTURE}>Future</SelectItem>
+                <SelectItem key={TRIGGER_TYPE.PRICE_DIFF}>
                     Price difference
                 </SelectItem>
-                <SelectItem key={TRIGGERTYPE.FUNDING_RATE}>
+                <SelectItem key={TRIGGER_TYPE.FUNDING_RATE}>
                     Funding rate
                 </SelectItem>
             </Select>
@@ -187,7 +350,7 @@ export default function TriggerForm() {
                         onChange={(e) => {
                             const val = e.target.value;
 
-                            // cho phép số + dấu .
+                            // cho ph�p s? + d?u .
                             if (/^\d*\.?\d*$/.test(val)) {
                                 onChangeForm({
                                     price: val === '' ? 0 : parseFloat(val),
@@ -198,12 +361,12 @@ export default function TriggerForm() {
                             formData.price === 0 ? '' : String(formData.price)
                         }
                         label={
-                            formData.triggerType === TRIGGERTYPE.PRICE_DIFF
+                            formData.triggerType === TRIGGER_TYPE.PRICE_DIFF
                                 ? 'Price Difference'
                                 : 'Price Threshold'
                         }
                         description={
-                            formData.triggerType === TRIGGERTYPE.PRICE_DIFF
+                            formData.triggerType === TRIGGER_TYPE.PRICE_DIFF
                                 ? 'Difference between spot and future price'
                                 : 'Target price (e.g., 76000.50)'
                         }
@@ -219,10 +382,17 @@ export default function TriggerForm() {
                             const val = e.target.value;
 
                             if (/^\d*\.?\d*$/.test(val)) {
-                                onChangeForm({ fundingRate: val });
+                                onChangeForm({
+                                    fundingRate:
+                                        val === '' ? 0 : parseFloat(val),
+                                });
                             }
                         }}
-                        value={formData.fundingRate}
+                        value={
+                            formData.fundingRate === 0
+                                ? ''
+                                : String(formData.fundingRate)
+                        }
                         label="Funding Rate"
                         description="e.g., 0.0001 = 0.01%"
                         placeholder="Enter funding rate"
@@ -234,205 +404,415 @@ export default function TriggerForm() {
                 <Select
                     onChange={(e) => {
                         onChangeForm({
-                            condition: e.target.value as Condition,
+                            operator: e.target.value as Operator,
                         });
                     }}
-                    selectedKeys={[formData.condition]}
-                    label="Condition"
+                    selectedKeys={[formData.operator]}
+                    label="Operator"
                     radius="sm"
                 >
-                    <SelectItem key={CONDITION.EQUAL}>Equal</SelectItem>
-                    <SelectItem key={CONDITION.GREATER_THAN}>
+                    <SelectItem key={OPERATOR.EQUAL}>Equal</SelectItem>
+                    <SelectItem key={OPERATOR.GREATER_THAN}>
                         Greater than
                     </SelectItem>
-                    <SelectItem key={CONDITION.GREATER_THAN_OR_EQUAL}>
+                    <SelectItem key={OPERATOR.GREATER_THAN_OR_EQUAL}>
                         Greater than or equal
                     </SelectItem>
-                    <SelectItem key={CONDITION.LESS_THAN}>Less than</SelectItem>
-                    <SelectItem key={CONDITION.LESS_THAN_OR_EQUAL}>
+                    <SelectItem key={OPERATOR.LESS_THAN}>Less than</SelectItem>
+                    <SelectItem key={OPERATOR.LESS_THAN_OR_EQUAL}>
                         Less than or equal
                     </SelectItem>
                 </Select>
+
+                <Select
+                    onChange={(e) => {
+                        onChangeForm({
+                            conditionMode: e.target.value as ConditionMode,
+                        });
+                    }}
+                    selectedKeys={[
+                        formData.conditionMode || CONDITION_MODE.STATIC,
+                    ]}
+                    label="Condition Mode"
+                    radius="sm"
+                >
+                    {conditionModeOptions.map((item) => (
+                        <SelectItem key={item.key}>{item.label}</SelectItem>
+                    ))}
+                </Select>
+            </div>
+
+            <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={String(formData.cooldownSeconds || 30)}
+                    onChange={(e) =>
+                        onChangeForm({
+                            cooldownSeconds: Math.max(
+                                0,
+                                Number(e.target.value) || 0,
+                            ),
+                        })
+                    }
+                    label="Cooldown (seconds)"
+                    radius="sm"
+                />
+                <Input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={String(formData.dedupeWindowSeconds || 30)}
+                    onChange={(e) =>
+                        onChangeForm({
+                            dedupeWindowSeconds: Math.max(
+                                0,
+                                Number(e.target.value) || 0,
+                            ),
+                        })
+                    }
+                    label="Dedupe window (seconds)"
+                    radius="sm"
+                />
+                <Input
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={String(formData.minConfirmations || 1)}
+                    onChange={(e) =>
+                        onChangeForm({
+                            minConfirmations: Math.max(
+                                1,
+                                Number(e.target.value) || 1,
+                            ),
+                        })
+                    }
+                    label="Confirmations"
+                    radius="sm"
+                />
             </div>
 
             {/* Notification */}
             <Select
                 onChange={(e) => {
                     onChangeForm({
-                        notification_method: e.target
+                        notificationMethod: e.target
                             .value as NotificationMethod,
                     });
                 }}
-                selectedKeys={[formData.notification_method]}
+                selectedKeys={[formData.notificationMethod]}
                 label="Notification type"
                 radius="sm"
             >
-                <SelectItem key={NOTIFICATION_METHOD.TELEGRAM}>
-                    Telegram
-                </SelectItem>
                 <SelectItem key={NOTIFICATION_METHOD.EMAIL}>Email</SelectItem>
             </Select>
+
+            <div className="w-full flex gap-4">
+                <DatePicker
+                    value={safeParseDateTime(
+                        formData.timeWindow?.start ?? undefined,
+                    )}
+                    onChange={(date) => {
+                        setFormData((prev) => ({
+                            ...prev,
+                            timeWindow: {
+                                ...prev.timeWindow,
+                                start: date ? date.toString() : null,
+                            },
+                        }));
+                    }}
+                    hideTimeZone
+                    label="Snooze start time"
+                    radius="sm"
+                />
+                <DatePicker
+                    value={safeParseDateTime(
+                        formData.timeWindow?.end ?? undefined,
+                    )}
+                    onChange={(date) => {
+                        setFormData((prev) => ({
+                            ...prev,
+                            timeWindow: {
+                                ...prev.timeWindow,
+                                end: date ? date.toString() : null,
+                            },
+                        }));
+                        console.log('end', formData.timeWindow);
+                    }}
+                    hideTimeZone
+                    label="Snooze end time"
+                    radius="sm"
+                />
+            </div>
 
             <Select
                 onChange={(e) => {
                     onChangeForm({
-                        notificationOption: e.target.value as
-                            | 'none'
-                            | 'snooze'
-                            | 'indicator',
+                        alertTriggerStrategy: e.target
+                            .value as AlertTriggerStrategy,
                     });
                 }}
-                selectedKeys={[formData.notificationOption]}
-                label="Notification option"
+                selectedKeys={
+                    formData.alertTriggerStrategy
+                        ? [formData.alertTriggerStrategy]
+                        : undefined
+                }
+                label="Snooze condition type"
                 radius="sm"
             >
-                <SelectItem key={ALERT_NOTIFICATION_OPTION.NONE}>
-                    None
+                <SelectItem key={ALERT_TRIGGER_STRATEGY.ONCE_IN_DURATION}>
+                    Once in duration
                 </SelectItem>
-                <SelectItem key={ALERT_NOTIFICATION_OPTION.SNOOZE}>
-                    Snooze
+                <SelectItem key={ALERT_TRIGGER_STRATEGY.REPEAT_N_TIMES}>
+                    Repeat n times
                 </SelectItem>
-                <SelectItem key={ALERT_NOTIFICATION_OPTION.INDICATOR}>
-                    Indicator
+                <SelectItem key={ALERT_TRIGGER_STRATEGY.AT_SPECIFIC_TIME}>
+                    At specific time
+                </SelectItem>
+                <SelectItem key={ALERT_TRIGGER_STRATEGY.FOREVER}>
+                    Forever
+                </SelectItem>
+                <SelectItem key={ALERT_TRIGGER_STRATEGY.ONE_TIME}>
+                    One time
                 </SelectItem>
             </Select>
 
-            {isSnoozeSelected && (
-                <>
-                    <div className="w-full flex gap-4">
-                        <DatePicker
-                            value={parseDateTime(formData.startTime || '')}
-                            onChange={(date) => {
-                                onChangeForm({ startTime: date.toString() });
-                            }}
-                            hideTimeZone
-                            label="Snooze start time"
-                            radius="sm"
-                        />
-                        <DatePicker
-                            value={parseDateTime(formData.endTime || '')}
-                            onChange={(date) => {
-                                onChangeForm({ endTime: date.toString() });
-                            }}
-                            hideTimeZone
-                            label="Snooze end time"
-                            radius="sm"
-                        />
-                    </div>
+            <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <Select
+                    onChange={(e) => {
+                        onChangeForm({
+                            logicType: e.target.value as LogicType,
+                        });
+                    }}
+                    selectedKeys={[formData.logicType || LOGIC_TYPE.AND]}
+                    label="Logic between conditions"
+                    radius="sm"
+                >
+                    <SelectItem key={LOGIC_TYPE.AND}>AND</SelectItem>
+                    <SelectItem key={LOGIC_TYPE.OR}>OR</SelectItem>
+                </Select>
 
+                <Button
+                    radius="sm"
+                    variant="flat"
+                    onClick={() =>
+                        setEnableSecondaryCondition((previous) => !previous)
+                    }
+                >
+                    {enableSecondaryCondition
+                        ? 'Remove 2nd condition'
+                        : 'Add 2nd condition'}
+                </Button>
+
+                <Button
+                    radius="sm"
+                    variant="flat"
+                    isDisabled={!enableSecondaryCondition}
+                    onClick={() =>
+                        setEnableThirdCondition((previous) => !previous)
+                    }
+                >
+                    {enableThirdCondition
+                        ? 'Remove 3rd condition'
+                        : 'Add 3rd condition'}
+                </Button>
+            </div>
+
+            {enableThirdCondition && (
+                <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Select
-                        onChange={(e) => {
-                            onChangeForm({
-                                conditionType: e.target.value as ConditionType,
-                            });
-                        }}
-                        selectedKeys={[
-                            formData.conditionType ||
-                                CONDITIONTYPE.ONCE_IN_DURATION,
-                        ]}
-                        label="Snooze condition type"
+                        onChange={(e) =>
+                            setNestedInnerLogic(e.target.value as LogicType)
+                        }
+                        selectedKeys={[nestedInnerLogic]}
+                        label="Inner logic (A ? B)"
                         radius="sm"
                     >
-                        <SelectItem key={CONDITIONTYPE.ONCE_IN_DURATION}>
-                            Once in duration
-                        </SelectItem>
-                        <SelectItem key={CONDITIONTYPE.REPEAT_N_TIMES}>
-                            Repeat n times
-                        </SelectItem>
-                        <SelectItem key={CONDITIONTYPE.AT_SPECIFIC_TIME}>
-                            At specific time
-                        </SelectItem>
-                        <SelectItem key={CONDITIONTYPE.FOREVER}>
-                            Forever
-                        </SelectItem>
-                        <SelectItem key={CONDITIONTYPE.ONE_TIME}>
-                            One time
-                        </SelectItem>
+                        <SelectItem key={LOGIC_TYPE.AND}>AND</SelectItem>
+                        <SelectItem key={LOGIC_TYPE.OR}>OR</SelectItem>
                     </Select>
-                </>
+                    <Select
+                        onChange={(e) =>
+                            setNestedOuterLogic(e.target.value as LogicType)
+                        }
+                        selectedKeys={[nestedOuterLogic]}
+                        label="Outer logic ((A ? B) ? C)"
+                        radius="sm"
+                    >
+                        <SelectItem key={LOGIC_TYPE.AND}>AND</SelectItem>
+                        <SelectItem key={LOGIC_TYPE.OR}>OR</SelectItem>
+                    </Select>
+                </div>
             )}
 
-            {isIndicatorSelected && (
-                <>
-                    <div className="w-full flex gap-4">
-                        <Select
-                            onChange={(e) => {
-                                onChangeForm({
-                                    indicatorType: e.target.value as Indicator,
-                                });
-                            }}
-                            selectedKeys={[
-                                formData.indicatorType || INDICATOR.EMA,
-                            ]}
-                            label="Indicator"
-                            radius="sm"
-                        >
-                            <SelectItem key={INDICATOR.EMA}>EMA</SelectItem>
-                            <SelectItem key={INDICATOR.BOLL}>BOLL</SelectItem>
-                            <SelectItem key={INDICATOR.MA}>MA</SelectItem>
-                        </Select>
+            {enableSecondaryCondition && (
+                <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Select
+                        onChange={(e) =>
+                            setSecondaryCondition((prev) => ({
+                                ...prev,
+                                metric: e.target.value as
+                                    | 'price'
+                                    | 'funding_rate'
+                                    | 'price_difference',
+                            }))
+                        }
+                        selectedKeys={[secondaryCondition.metric]}
+                        label="2nd Trigger Type"
+                        radius="sm"
+                    >
+                        <SelectItem key="price">Price</SelectItem>
+                        <SelectItem key="funding_rate">Funding rate</SelectItem>
+                        <SelectItem key="price_difference">Spread</SelectItem>
+                    </Select>
 
-                        <Input
-                            type="number"
-                            step="1"
-                            onChange={(e) => {
-                                const value = parseInt(e.target.value, 10);
-                                if (!isNaN(value)) {
-                                    onChangeForm({ indicatorPeriod: value });
-                                }
-                            }}
-                            value={String(formData.indicatorPeriod || '')}
-                            label="Indicator period"
-                            placeholder="14"
-                            radius="sm"
-                        />
-                    </div>
+                    <Select
+                        onChange={(e) =>
+                            setSecondaryCondition((prev) => ({
+                                ...prev,
+                                operator: e.target.value as Operator,
+                            }))
+                        }
+                        selectedKeys={[
+                            secondaryCondition.operator ||
+                                OPERATOR.GREATER_THAN,
+                        ]}
+                        label="2nd condition"
+                        radius="sm"
+                    >
+                        <SelectItem key={OPERATOR.EQUAL}>Equal</SelectItem>
+                        <SelectItem key={OPERATOR.GREATER_THAN}>
+                            Greater than
+                        </SelectItem>
+                        <SelectItem key={OPERATOR.GREATER_THAN_OR_EQUAL}>
+                            Greater than or equal
+                        </SelectItem>
+                        <SelectItem key={OPERATOR.LESS_THAN}>
+                            Less than
+                        </SelectItem>
+                        <SelectItem key={OPERATOR.LESS_THAN_OR_EQUAL}>
+                            Less than or equal
+                        </SelectItem>
+                    </Select>
 
-                    <div className="w-full flex gap-4">
-                        <Input
-                            type="number"
-                            step="0.0001"
-                            onChange={(e) => {
-                                const value = parseFloat(e.target.value);
-                                if (!isNaN(value)) {
-                                    onChangeForm({ indicatorThreshold: value });
-                                }
-                            }}
-                            value={String(formData.indicatorThreshold || '')}
-                            label="Indicator threshold"
-                            placeholder="Enter threshold"
-                            radius="sm"
-                        />
+                    <Select
+                        onChange={(e) =>
+                            setSecondaryCondition((prev) => ({
+                                ...prev,
+                                conditionMode: e.target.value as ConditionMode,
+                            }))
+                        }
+                        selectedKeys={[
+                            secondaryCondition.conditionMode ||
+                                CONDITION_MODE.STATIC,
+                        ]}
+                        label="2nd mode"
+                        radius="sm"
+                    >
+                        {conditionModeOptions.map((item) => (
+                            <SelectItem key={item.key}>{item.label}</SelectItem>
+                        ))}
+                    </Select>
 
-                        <Select
-                            onChange={(e) => {
-                                onChangeForm({
-                                    indicatorCondition: e.target
-                                        .value as Condition,
-                                });
-                            }}
-                            selectedKeys={[
-                                formData.indicatorCondition || CONDITION.EQUAL,
-                            ]}
-                            label="Indicator condition"
-                            radius="sm"
-                        >
-                            <SelectItem key={CONDITION.EQUAL}>Equal</SelectItem>
-                            <SelectItem key={CONDITION.GREATER_THAN}>
-                                Greater than
-                            </SelectItem>
-                            <SelectItem key={CONDITION.GREATER_THAN_OR_EQUAL}>
-                                Greater than or equal
-                            </SelectItem>
-                            <SelectItem key={CONDITION.LESS_THAN}>
-                                Less than
-                            </SelectItem>
-                            <SelectItem key={CONDITION.LESS_THAN_OR_EQUAL}>
-                                Less than or equal
-                            </SelectItem>
-                        </Select>
-                    </div>
-                </>
+                    <Input
+                        type="number"
+                        step="0.0001"
+                        value={String(secondaryCondition.value || '')}
+                        onChange={(e) =>
+                            setSecondaryCondition((prev) => ({
+                                ...prev,
+                                value: Number(e.target.value) || 0,
+                            }))
+                        }
+                        label="2nd threshold"
+                        radius="sm"
+                    />
+                </div>
+            )}
+
+            {enableThirdCondition && (
+                <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Select
+                        onChange={(e) =>
+                            setThirdCondition((prev) => ({
+                                ...prev,
+                                metric: e.target.value as
+                                    | 'price'
+                                    | 'funding_rate'
+                                    | 'price_difference',
+                            }))
+                        }
+                        selectedKeys={[thirdCondition.metric]}
+                        label="3rd metric"
+                        radius="sm"
+                    >
+                        <SelectItem key="price">Price</SelectItem>
+                        <SelectItem key="funding_rate">Funding rate</SelectItem>
+                        <SelectItem key="price_difference">Spread</SelectItem>
+                    </Select>
+
+                    <Select
+                        onChange={(e) =>
+                            setThirdCondition((prev) => ({
+                                ...prev,
+                                operator: e.target.value as Operator,
+                            }))
+                        }
+                        selectedKeys={[
+                            thirdCondition.operator || OPERATOR.GREATER_THAN,
+                        ]}
+                        label="3rd condition"
+                        radius="sm"
+                    >
+                        <SelectItem key={OPERATOR.EQUAL}>Equal</SelectItem>
+                        <SelectItem key={OPERATOR.GREATER_THAN}>
+                            Greater than
+                        </SelectItem>
+                        <SelectItem key={OPERATOR.GREATER_THAN_OR_EQUAL}>
+                            Greater than or equal
+                        </SelectItem>
+                        <SelectItem key={OPERATOR.LESS_THAN}>
+                            Less than
+                        </SelectItem>
+                        <SelectItem key={OPERATOR.LESS_THAN_OR_EQUAL}>
+                            Less than or equal
+                        </SelectItem>
+                    </Select>
+
+                    <Select
+                        onChange={(e) =>
+                            setThirdCondition((prev) => ({
+                                ...prev,
+                                conditionMode: e.target.value as ConditionMode,
+                            }))
+                        }
+                        selectedKeys={[
+                            thirdCondition.conditionMode ||
+                                CONDITION_MODE.STATIC,
+                        ]}
+                        label="3rd mode"
+                        radius="sm"
+                    >
+                        {conditionModeOptions.map((item) => (
+                            <SelectItem key={item.key}>{item.label}</SelectItem>
+                        ))}
+                    </Select>
+
+                    <Input
+                        type="number"
+                        step="0.0001"
+                        value={String(thirdCondition.value || '')}
+                        onChange={(e) =>
+                            setThirdCondition((prev) => ({
+                                ...prev,
+                                value: Number(e.target.value) || 0,
+                            }))
+                        }
+                        label="3rd threshold"
+                        radius="sm"
+                    />
+                </div>
             )}
 
             {/* Submit */}

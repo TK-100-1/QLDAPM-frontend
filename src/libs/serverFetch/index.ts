@@ -2,11 +2,7 @@ import { cookies } from 'next/headers';
 import { BaseUrl } from '..';
 import axios from 'axios';
 import { BasicUserInfo } from '@/src/types/user';
-import {
-    IndicatorTrigerData,
-    SnoozeAlertData,
-    TriggerConditionData,
-} from '@/src/types/alert';
+import { TriggerConditionData } from '@/src/types/alert';
 import { CoinData, CoinDetailData, CoinHistoryData } from '@/src/types/coin';
 // import mockCoinData from "./mockCoinData.json";
 // import mockHistoryData from "./mockHistoryData.json";
@@ -115,16 +111,65 @@ export async function fetchInfo() {
     }
 }
 
+// export async function fetchAlerts() {
+//     const cookieStore = cookies();
+//     const token = cookieStore.get('token')?.value;
+//     const vip2Url = `${BaseUrl}/vip2/alerts`;
+
+//     const triggerList: TriggerConditionData[] = [];
+
+//     // Fetch trigger alerts from VIP-2 endpoint
+//     try {
+//         const res = await axios.get(vip2Url, {
+//             headers: {
+//                 'Content-Type': 'application/json',
+//                 Authorization: token,
+//             },
+//         });
+
+//         const list: any[] = res.data;
+//         for (const item of list) {
+//             const triggerType =
+//                 item.triggerType || item.trigger_type || item.type || '';
+//             const notificationMethod =
+//                 item.notification_method ||
+//                 item.notification?.method ||
+//                 item.method ||
+//                 '';
+
+//             triggerList.push({
+//                 ...item,
+//                 alert_id: item._id,
+//                 triggerType,
+//                 status: item.status,
+//                 notification_method: notificationMethod,
+//                 spotPriceThreshold:
+//                     item.spotPriceThreshold ||
+//                     item.spot_price_threshold ||
+//                     item.price ||
+//                     item.threshold ||
+//                     0,
+//             });
+//         }
+//     } catch (error: any) {
+//         console.error(
+//             '[fetchAlerts] VIP-2 fetch failed:',
+//             error?.response?.data || error,
+//         );
+//     }
+
+//     return {
+//         triggerList,
+//     };
+// }
+
 export async function fetchAlerts() {
     const cookieStore = cookies();
     const token = cookieStore.get('token')?.value;
     const vip2Url = `${BaseUrl}/vip2/alerts`;
 
     const triggerList: TriggerConditionData[] = [];
-    const snoozeList: SnoozeAlertData[] = [];
-    const indicatorList: IndicatorTrigerData[] = [];
 
-    // Fetch trigger alerts from VIP-2 endpoint
     try {
         const res = await axios.get(vip2Url, {
             headers: {
@@ -134,58 +179,38 @@ export async function fetchAlerts() {
         });
 
         const list: any[] = res.data;
+
         for (const item of list) {
             const triggerType =
                 item.triggerType || item.trigger_type || item.type || '';
-            const isSnooze = Boolean(item.snooze_condition);
-            const isIndicator =
-                item.notification_option === 'indicator' ||
-                Boolean(item.indicator) ||
-                Number(item.indicator_period || 0) > 0;
 
-            if (isSnooze) {
-                snoozeList.push({
-                    ...item,
-                    alert_id: item._id,
-                    triggerType,
-                    start_time: item.start_time || item.created_at || '',
-                    end_time: item.end_time || '',
-                    snooze_condition: item.snooze_condition || '',
-                    is_active:
-                        typeof item.is_active === 'boolean'
-                            ? item.is_active
-                            : true,
-                    notification_method: item.notification_method || 'telegram',
-                });
-                continue;
-            }
+            const notificationMethod =
+                item.notification_method ||
+                item.notification?.method ||
+                item.method ||
+                '';
 
-            if (isIndicator) {
-                indicatorList.push({
-                    ...item,
-                    alert_id: item._id,
-                    triggerType: (item.trigger_type ||
-                        item.triggerType ||
-                        'indicator') as any,
-                    condition: (item.indicator_condition ||
-                        item.condition ||
-                        '=') as any,
-                    value:
-                        item.indicator_threshold ||
-                        item.threshold ||
-                        item.price ||
-                        0,
-                    indicator: item.indicator || null,
-                    period: item.indicator_period || item.period || 0,
-                    notification_method: item.notification_method || 'telegram',
-                });
-                continue;
-            }
+            //  build message chuẩn từ _messages
+            const messages = item._messages || [];
+
+            const finalMessage =
+                messages.length > 0 ? messages.join('\n') : item.message || '';
 
             triggerList.push({
                 ...item,
+
                 alert_id: item._id,
                 triggerType,
+                notification_method: notificationMethod,
+
+                //  NEW
+                status: item.status,
+                status_reason: item.status_reason,
+
+                //  message đẹp hơn
+                message: finalMessage,
+                _messages: messages,
+
                 spotPriceThreshold:
                     item.spotPriceThreshold ||
                     item.spot_price_threshold ||
@@ -203,8 +228,6 @@ export async function fetchAlerts() {
 
     return {
         triggerList,
-        snoozeList,
-        indicatorList,
     };
 }
 
