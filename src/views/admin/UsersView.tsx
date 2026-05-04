@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { AdminUser } from "@/src/libs/serverFetch/adminFetch";
+import { AdminUser, AdminRole } from "@/src/libs/serverFetch/adminFetch";
 import {
   manageUserAction,
   createUserAction,
@@ -40,9 +40,10 @@ import { useRouter } from "next/navigation";
 
 interface Props {
   initialUsers: AdminUser[];
+  roles: AdminRole[];
 }
 
-export default function UsersView({ initialUsers }: Props) {
+export default function UsersView({ initialUsers, roles }: Props) {
   const [users, setUsers] = useState<AdminUser[]>(initialUsers);
   const [search, setSearch] = useState("");
   const router = useRouter();
@@ -173,13 +174,7 @@ export default function UsersView({ initialUsers }: Props) {
     }
   };
 
-  const roleOptions = [
-    { label: "User", value: "VIP-0" },
-    { label: "VIP 1", value: "VIP-1" },
-    { label: "VIP 2", value: "VIP-2" },
-    { label: "VIP 3", value: "VIP-3" },
-    { label: "Admin", value: "Admin" },
-  ];
+  const roleOptions = roles.map(r => ({ label: r.name, value: r.name }));
 
   return (
     <div className="flex flex-col gap-6 p-8 w-full max-w-7xl mx-auto">

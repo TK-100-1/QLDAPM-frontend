@@ -58,3 +58,30 @@ export async function fetchPaymentHistory() {
     return { data: [], success: false };
   }
 }
+
+export interface AdminRole {
+  _id: string;
+  name: string;
+  permissions: string[];
+  price: number;
+  description: string;
+}
+
+export async function fetchRoles() {
+  const cookieStore = cookies();
+  const token = cookieStore.get("token")?.value;
+  const url = `${BaseUrl}/admin/roles`;
+
+  try {
+    const res = await axios.get(url, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token,
+      },
+    });
+    return { data: res.data.data as AdminRole[], success: true };
+  } catch (error) {
+    console.error("fetchRoles error:", error);
+    return { data: [], success: false };
+  }
+}
