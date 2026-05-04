@@ -257,3 +257,31 @@ export async function fetchAvailableRoles() {
         };
     }
 }
+
+export async function checkPaymentStatus(orderId: string) {
+    const cookieStore = cookies();
+    const token = cookieStore.get('token')?.value;
+    const url = `${BaseUrl}/payment/status`;
+
+    try {
+        const res = await axios.post(
+            url,
+            { orderId },
+            {
+                headers: customHeader(token),
+            },
+        );
+        return {
+            success: true,
+            status: res.data.status,
+            token: res.data.token,
+        };
+    } catch (error: any) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.error || 'Failed to check status',
+        };
+    }
+}
+

@@ -7,6 +7,7 @@ import {
     updateUserInformation,
     uploadAvatar,
     fetchAvailableRoles,
+    checkPaymentStatus,
 } from '@/src/libs/serverAction/user';
 import { useAuth } from '@/src/provider/AuthProvider';
 import {
@@ -644,27 +645,16 @@ function PurchaseVIP() {
         setPolling(true);
         const interval = setInterval(async () => {
             try {
-                const token = document.cookie.split('token=')[1]?.split(';')[0] || '';
-                const res = await fetch(`${ServerUrl}/payment/status`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': token
-                    },
-                    body: JSON.stringify({ orderId })
-                });
-                const data = await res.json();
-                if (data.status === '0') { // success
+                const res = await checkPaymentStatus(orderId);
+                if (res.success && res.status === '0') { // success
                     clearInterval(interval);
                     setPolling(false);
                     toast.success("Payment successful! VIP upgraded.");
-                    // Need to save new token if returned
-                    if (data.token) {
-                        document.cookie = `token=${data.token}; path=/;`;
-                    }
+                    // The server action already handles the token if the backend returned one,
+                    // but we might need to refresh the page to see changes.
                     router.refresh();
                     window.location.reload();
-                } else if (data.status === 'failed') {
+                } else if (res.success && res.status === 'failed') {
                     clearInterval(interval);
                     setPolling(false);
                     toast.error("Payment expired or failed.");
