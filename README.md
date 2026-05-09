@@ -1,248 +1,463 @@
-# **Crypto Price & Alert System**
+# 🌊 QLDAPM Frontend
 
-### **Project Overview**
+> **Nền tảng giao diện cho hệ thống quản lý giá coin và cảnh báo, xây dựng bằng Next.js App Router với cấu trúc module rõ ràng, dễ mở rộng và dễ bảo trì.**
 
-The **Crypto Price & Alert System** is a web-based application designed to allow users to monitor real-time cryptocurrency market data and set personalized alerts based on different pricing metrics. The application is targeted towards users with varying levels of membership (VIP levels) who can access specific features based on their membership level. The system integrates with major crypto market APIs (e.g., Binance, CoinMarketCap, CoinGecko) to retrieve up-to-date information and allow users to create alerts for price changes, new listings, delistings, and more.
-
-This README provides a detailed description of the project, focusing on front-end development and the functional requirements in the form of a Software Requirements Specification (SRS) for the Front-end module.
-
----
-
-### **Table of Contents**
-
-- [**Crypto Price \& Alert System**](#crypto-price--alert-system)
-  - [**Project Overview**](#project-overview)
-  - [**Table of Contents**](#table-of-contents)
-  - [**Project Objectives**](#project-objectives)
-  - [**Features**](#features)
-  - [**VIP Access Levels**](#vip-access-levels)
-  - [**Technical Stack**](#technical-stack)
-  - [**API Endpoints Overview**](#api-endpoints-overview)
-  - [**Front-end Modules**](#front-end-modules)
-  - [**Setup Instructions**](#setup-instructions)
-  - [**Project Structure**](#project-structure)
-  - [**SRS Documentation**](#srs-documentation)
-  - [**Contributing**](#contributing)
-  - [**Contact**](#contact)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=nextdotjs)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?style=flat-square&logo=tailwindcss)](https://tailwindcss.com/)
+[![NextUI](https://img.shields.io/badge/NextUI-2-000000?style=flat-square)](https://nextui.org/)
+[![License](https://img.shields.io/badge/License-Internal-lightgrey?style=flat-square)]()
 
 ---
 
-### **Project Objectives**
+## 📋 Mục lục
 
-- **Real-Time Data**: Display real-time data for spot, future, and funding rate pricing for cryptocurrencies.
-- **User-Specific Alerts**: Allow users to set personalized alerts based on various price metrics, available through a tiered VIP system.
-- **Flexible Access Control**: Implement VIP levels that allow users access to specific features based on their subscription, enhancing the product’s premium appeal.
-- **Intuitive UI**: Provide a user-friendly interface to view data, create alerts, and manage user profiles and VIP subscriptions.
-
----
-
-### **Features**
-
-The Crypto Price & Alert System is designed with the following key features:
-
-- **Data Monitoring**: Real-time monitoring of cryptocurrency spot prices, future prices, and funding rates.
-- **VIP-Specific Access**: Tiered access to features, depending on the user’s VIP level.
-- **Price Alerts**: Create alerts based on spot/future prices, funding rates, and differences between spot and future prices.
-- **Symbol Alerts**: Alerts for new listings or delistings on exchanges.
-- **Advanced Indicators**: Access to custom indicators such as EMA and Bollinger Bands, available to higher-tier VIP users.
-- **Secure Authentication**: User registration, login, logout, and token-based authentication, supporting JWT tokens.
+- [Tổng quan](#-tổng-quan)
+- [Tính năng nổi bật](#-tính-năng-nổi-bật)
+- [Công nghệ sử dụng](#-công-nghệ-sử-dụng)
+- [Hướng dẫn cài đặt](#-hướng-dẫn-cài-đặt)
+- [Hướng dẫn sử dụng](#-hướng-dẫn-sử-dụng)
+- [Backend](#-backend)
+- [Cấu trúc thư mục](#-cấu-trúc-thư-mục)
+- [Thành viên](#-thành-viên)
 
 ---
 
-### **VIP Access Levels**
+## 🎯 Tổng quan
 
-The system implements a tiered access control for features, with four primary levels:
+**QLDAPM Frontend** là phần giao diện của hệ thống quản lý giá coin và cảnh báo. Dự án được tổ chức theo kiến trúc **Next.js App Router**, tách rõ các lớp như `app`, `components`, `layouts`, `libs`, `provider`, `types` và `views` để thuận tiện cho việc phát triển, mở rộng và bảo trì.
 
-1. **VIP-0**: Basic access to view spot, future, and funding rate data.
-2. **VIP-1**: Additional access to view Kline.
-3. **VIP-2**: Includes VIP-1 features and enables users to set alerts (e.g., price differences, symbol alerts).
-4. **VIP-3**: Includes all previous features and grants access to advanced indicators (e.g., EMA, Bollinger Bands).
+Ứng dụng hỗ trợ các luồng chính như:
 
-Each endpoint in the system is gated by the VIP level, with a **403 Forbidden** response for unauthorized access.
-
----
-
-### **Technical Stack**
-
-- **Frontend**: Next.js, React, Chart.js/D3.js (for data visualization), Axios (for API requests)
-- **Backend**: Go (Gin framework)
-- **Database**: MongoDB
-- **Authentication**: JWT-based, with cookie management for secure sessions
-- **APIs**: Binance, CoinMarketCap, and CoinGecko for real-time data
+- Xem market và dữ liệu coin
+- Xem chi tiết coin với biểu đồ và thông tin liên quan
+- Đăng nhập, đăng ký và quản lý phiên người dùng
+- Quản lý cảnh báo và các trang admin
 
 ---
 
-### **API Endpoints Overview**
+## 🧱 Backend
 
-The API provides various endpoints to access cryptocurrency data, set alerts, and manage user accounts. Below is a high-level overview of the API endpoints:
+Phần backend của dự án nằm trong thư mục [QLDAPM-backend](../QLDAPM-backend) và được xây dựng bằng **Node.js + Express**. Đây là lớp xử lý API, xác thực, lưu trữ dữ liệu và các luồng nghiệp vụ cho frontend.
 
-- **Public API (`/api/v1`)**:
-  - `GET /spot-future-fundingrate`: Retrieve spot, future, and funding rate data.
+### Thành phần chính
 
-- **VIP-1 API (`/api/v1/vip1`)**:
-  - `GET /kline`: Retrieve Kline chart data.
+- `src/app.js`: điểm khởi động của backend.
+- `src/config/database.js`: cấu hình kết nối cơ sở dữ liệu.
+- `src/middlewares`: các middleware như xác thực và upload file.
+- `src/services/price`: xử lý dữ liệu giá coin, kline, funding rate và websocket.
+- `src/services/trigger`: xử lý cảnh báo và logic phát thông báo.
+- `src/services/admin`: xử lý người dùng, thanh toán, xác thực và các tác vụ quản trị.
 
-- **VIP-2 API (`/api/v1/vip2`)**:
-  - `POST /alerts/spot-future-difference`: Set alerts for price differences.
-  - `POST /alerts/symbols`: Set alerts for new or delisted symbols.
-  - `POST /alerts`: General alerts (e.g., spot, future, funding rate).
+### Công nghệ backend
 
-- **VIP-3 API (`/api/v1/vip3`)**:
-  - `POST /indicators`: Set advanced indicators (e.g., EMA, Bollinger Bands).
+| Thành phần   | Công nghệ                         |
+| ------------ | --------------------------------- |
+| Runtime      | Node.js                           |
+| Framework    | Express                           |
+| Database     | MongoDB                           |
+| Xác thực     | JWT                               |
+| Upload       | Multer                            |
+| Realtime     | WebSocket / express-ws            |
+| Email        | node-mailjet                      |
+| Tài liệu API | swagger-jsdoc, swagger-ui-express |
 
-For more detailed specifications, please refer to the **API Documentation**.
+### Chạy backend
 
----
-
-### **Front-end Modules**
-
-The Front-end team is responsible for the following modules:
-
-1. **Dashboard**:
-   - Displays real-time data on spot, future, and funding rates.
-   - Provides a UI for viewing Kline data (VIP-1+ users).
-
-2. **Alerts Management**:
-   - Provides forms for setting alerts based on user’s VIP level.
-   - Manages alerts for price differences, symbol listings, and advanced indicators.
-
-3. **User Authentication & Profile**:
-   - Manages user login, registration, and logout.
-   - Displays user profile information and VIP level.
-
-4. **VIP Subscription**:
-   - Displays VIP benefits and pricing options.
-   - Integrates payment for upgrading VIP status (if applicable).
-
-5. **Advanced Indicators (VIP-3)**:
-   - Allows users to set and view advanced indicators on their dashboard.
-
----
-
-### **Setup Instructions**
-
-Follow these instructions to set up the development environment:
-
-1. **Clone the repository**:
-
-   ```bash
-   git clone https://github.com/dath-241/coin-price-web.git
-   ```
-
-2. **Navigate into the project directory**:
-
-   ```bash
-   cd dev_frontend
-   ```
-
-3. **Install dependencies**:
-   - For Frontend (in the `/dev_frontend` directory):
-     ```bash
-     //This feature will be updated later
-     ```
-4. **Start the development server**:
-   - For Frontend:
-     ```bash
-     npm run dev
-     ```
-
----
-
-### **Project Structure**
-
-Below is an overview of the directory structure for the front-end and back-end modules:
-
+```bash
+cd "QLDAPM-backend"
+npm install
+npm run dev
 ```
-coin-price-web/
-├── Design/
-│   ├── Mockups/
-│   └── Usecase Diagram/
-│
-├── Documents/
-│   ├── System Requirement Specification/
-│   ├── API Specs (Samples API for Module Backend)/
-│   └── References/
-│
-├── Meeting Minutes/
-│
-├── public/ #Các tài nguyên tĩnh (hình ảnh, fonts, v.v.) sẽ được phục vụ trực tiếp
-│
-├── src/ #Thư mục chứa toàn bộ mã nguồn chính của dự án
-│   ├── app/ #Các trang chính của ứng dụng, tuân theo cấu trúc routing của Next.js
-│   │   ├── (authentication)/ #Các route về authenticate như signin, signup,...
-│   │   ├── (private)/ #Các route yêu cầu đăng nhập: market, alert,...
-│   │   ├── (public)/ #Các route không yêu cầu đăng nhập: landing page,...
-│   │   └── api/ #Các custom API route theo cấu trúc của Next.js
-│   │
-│   ├── component/ #Các component React dùng chung
-│   │
-│   ├── layouts/ #Các layout dùng chung cho các page
-│   │   ├── private_page/ #Layout sử dụng trong các page private
-│   │   └── public_page/ #Layout sử dụng trong các page public
-│   │
-│   ├── libs/ #Các hàm dùng để gọi API của Backend
-│   │   ├── serverAction/ #Định nghĩa các serverAction được chạy trên server
-│   │   └── serverFetch/ #Các hàm fetch data được chạy trên server
-│   │
-│   ├── provider/ #Chứa các React context provider
-│   │   ├── AuthProvider/ #Sử dụng cho việc xác thực người dùng
-│   │   └── ThemeProvider/ #Quản lý theme cho toàn trang web
-│   │
-│   ├── types/ #Định nghĩa các Typescript type hoặc interface sử dụng trong dự án
-│   │
-│   └── views/ #Các thành phần giao diện lớn kết hợp với các giao diện nhỏ
-│       ├── alert/ #UI alert
-│       ├── authentication/ #UI signin, signup,...
-│       ├── coin/ #UI xem thông tin coin
-│       ├── landing_page/ #UI landing_page
-│       ├── market/ #UI market
-│       └── user_profile/ #UI popup user profile
-│
-└── README.md
+
+Mặc định backend sẽ khởi động bằng `src/app.js` và cung cấp các API cho frontend sử dụng.
+
+---
+
+## ✨ Tính năng nổi bật
+
+### 🔍 Theo dõi thị trường
+
+- Hiển thị danh sách coin và dữ liệu thị trường theo thời gian thực.
+- Tích hợp các màn hình xem chi tiết coin và biểu đồ biến động.
+
+### 🔐 Xác thực người dùng
+
+- Hỗ trợ đăng nhập, đăng ký và quên mật khẩu.
+- Phân tách rõ các route authentication và private routes.
+
+### 🚨 Quản lý cảnh báo
+
+- Tạo, xem và quản lý cảnh báo theo tài khoản.
+- Hỗ trợ các màn hình thao tác cảnh báo riêng biệt.
+
+### 🧩 Kiến trúc rõ ràng
+
+- Tách biệt giao diện dùng chung, layout và logic gọi dữ liệu.
+- Dễ mở rộng các module như market, coin, alerts và admin.
+
+---
+
+## 🛠 Công nghệ sử dụng
+
+| Thành phần | Công nghệ                                      |
+| ---------- | ---------------------------------------------- |
+| Framework  | Next.js 14                                     |
+| UI         | React 18, NextUI                               |
+| Ngôn ngữ   | TypeScript                                     |
+| Styling    | Tailwind CSS                                   |
+| Biểu đồ    | Chart.js, lightweight-charts, Highcharts React |
+| Tiện ích   | Axios, next-themes, framer-motion, sonner      |
+
+---
+
+## 🚀 Hướng dẫn cài đặt
+
+### 📋 Yêu cầu hệ thống
+
+- Node.js 18 trở lên
+- npm đi kèm với Node.js
+- Backend API đang chạy nếu cần kết nối dữ liệu thật
+
+### 📦 Cài đặt dự án
+
+```bash
+cd "QLDAPM-frontend"
+npm install
+```
+
+### ▶ Chạy dự án ở chế độ phát triển
+
+```bash
+npm run dev
+```
+
+Sau khi chạy xong, mở trình duyệt tại:
+
+```bash
+http://localhost:3000
+```
+
+### 🧪 Các lệnh thường dùng
+
+```bash
+npm run build
+npm start
+npm run lint
 ```
 
 ---
 
-### **SRS Documentation**
+## 📱 Hướng dẫn sử dụng
 
-The **Software Requirements Specification (SRS)** for the front-end module includes the following sections:
+1. Mở trang chủ để xem landing page và điều hướng đến các tính năng chính.
+2. Đăng ký hoặc đăng nhập nếu muốn dùng các trang private.
+3. Vào trang market để xem danh sách coin và tìm kiếm theo tên hoặc mã coin.
+4. Mở trang chi tiết coin để xem dữ liệu chi tiết, biểu đồ và thông tin liên quan.
+5. Truy cập trang alerts để tạo, xem hoặc quản lý cảnh báo.
+6. Nếu có quyền quản trị, vào nhóm trang admin để theo dõi dashboard, người dùng và thanh toán.
 
-1. **System Overview**: Describes the purpose and scope of the system and its modules.
-2. **Functional Requirements**:
-   - **Dashboard**: Requirements for displaying real-time data and Kline data.
-   - **Alerts Management**: Requirements for managing alerts based on user’s VIP level.
-   - **User Authentication & Profile**: Requirements for user authentication and profile management.
-   - **VIP Subscription**: Requirements for managing VIP upgrades.
-3. **Non-Functional Requirements**:
-   - **Performance**: Expectations for response time and load handling.
-   - **Security**: Specifications for data protection, token management, and session handling.
-   - **Usability**: User experience guidelines and accessibility standards.
-4. **User Interface Design**:
-   - Wireframes and mockups for each module and screen.
-   - Navigation flow for user interactions.
+### Tài khoản dùng thử
 
-5. **API Integration Requirements**:
-   - Outlines data flow and integration points between front-end and back-end, and external APIs.
-
-The full SRS documentation is included in the **`/Documents/System Requirement Specification/Crypto_Market_SRS_v1.3.pdf`** file.
+| Vai trò | Email                   | Mật khẩu        |
+| ------- | ----------------------- | --------------- |
+| Admin   | admintest@gmail.com     | 123456A@        |
+| User    | phucloctho054@gmail.com | Ducphuong123@@@ |
 
 ---
 
-### **Contributing**
+## 🏗 Cấu trúc thư mục
 
-1. Fork the repository and create a new branch for your feature.
-2. Commit and push your changes to your branch.
-3. Submit a pull request with a description of your changes.
+```text
+QLDAPM-frontend/
+├── 📁 .github
+│   └── 📁 workflows
+│       ├── ⚙️ ci.yml
+│       └── ⚙️ deploy.yml
+├── 📁 Documents
+│   ├── 📁 API DOCS
+│   │   └── ⚙️ Document.yaml
+│   ├── 📁 API Specs (Samples API for Module Backend)
+│   │   ├── 📝 API Specification for Coin Price System v1.2.md
+│   │   └── 📝 Secret and API Usage.md
+│   └── 📁 Coding Style Docs
+│       └── 📕 Code Style.pdf
+├── 📁 public
+│   ├── 📁 landingpage
+│   │   ├── 🖼️ Component 1.svg
+│   │   ├── 🖼️ Component 2.svg
+│   │   └── 🖼️ Component 3.svg
+│   ├── 🖼️ google.svg
+│   ├── 🖼️ hcmutLogo.png
+│   ├── 🖼️ logo.png
+│   └── 🖼️ user.svg
+├── 📁 src
+│   ├── 📁 app
+│   │   ├── 📁 (authentication)
+│   │   │   ├── 📁 forgot_password
+│   │   │   │   └── 📄 page.tsx
+│   │   │   ├── 📁 signin
+│   │   │   │   └── 📄 page.tsx
+│   │   │   └── 📁 signup
+│   │   │       └── 📄 page.tsx
+│   │   ├── 📁 (private)
+│   │   │   ├── 📁 admin
+│   │   │   │   ├── 📁 dashboard
+│   │   │   │   │   └── 📄 page.tsx
+│   │   │   │   ├── 📁 payments
+│   │   │   │   │   └── 📄 page.tsx
+│   │   │   │   ├── 📁 users
+│   │   │   │   │   └── 📄 page.tsx
+│   │   │   │   └── 📄 layout.tsx
+│   │   │   ├── 📁 alerts
+│   │   │   │   └── 📄 page.tsx
+│   │   │   ├── 📁 coin
+│   │   │   │   └── 📁 [id]
+│   │   │   │       └── 📄 page.tsx
+│   │   │   ├── 📁 market
+│   │   │   │   └── 📄 page.tsx
+│   │   │   └── 📄 layout.tsx
+│   │   ├── 📁 (public)
+│   │   │   └── 📁 landing_page
+│   │   │       └── 📄 LandingPage.tsx
+│   │   ├── 📁 api
+│   │   │   ├── 📁 funding
+│   │   │   │   └── 📄 route.ts
+│   │   │   ├── 📁 future
+│   │   │   │   └── 📄 route.ts
+│   │   │   ├── 📁 kline
+│   │   │   │   └── 📄 route.ts
+│   │   │   ├── 📁 proxy
+│   │   │   │   └── 📁 coin
+│   │   │   │       ├── 📁 [id]
+│   │   │   │       │   ├── 📁 history
+│   │   │   │       │   │   └── 📄 route.ts
+│   │   │   │       │   └── 📄 route.ts
+│   │   │   │       └── 📁 list
+│   │   │   │           └── 📄 route.ts
+│   │   │   └── 📁 spot
+│   │   │       └── 📄 route.ts
+│   │   ├── 📁 test
+│   │   │   └── 📄 page.tsx
+│   │   ├── 🎨 globals.css
+│   │   ├── 📄 icon.ico
+│   │   ├── 📄 layout.tsx
+│   │   └── 📄 page.tsx
+│   ├── 📁 components
+│   │   ├── 📁 AlertManager
+│   │   ├── 📁 Box
+│   │   │   ├── 📁 FlexBox
+│   │   │   │   └── 📄 index.tsx
+│   │   │   └── 📁 GridBox
+│   │   │       └── 📄 index.tsx
+│   │   ├── 📁 Container
+│   │   │   └── 📄 index.tsx
+│   │   ├── 📁 Form
+│   │   │   └── 📄 index.tsx
+│   │   ├── 📁 Heading
+│   │   │   └── 📄 index.tsx
+│   │   ├── 📁 Logo
+│   │   │   └── 📄 index.tsx
+│   │   ├── 📁 RenderCase
+│   │   │   └── 📄 index.tsx
+│   │   └── 📁 VIPUpgradeGuard
+│   │       └── 📄 index.tsx
+│   ├── 📁 layouts
+│   │   ├── 📁 private_page
+│   │   │   └── 📁 Navbar
+│   │   │       └── 📄 index.tsx
+│   │   └── 📁 public_page
+│   │       ├── 📁 Footer
+│   │       │   └── 📄 index.tsx
+│   │       └── 📁 Navbar
+│   │           └── 📄 index.tsx
+│   ├── 📁 libs
+│   │   ├── 📁 hooks
+│   │   │   ├── 📄 index.ts
+│   │   │   └── 📄 useDebounce.ts
+│   │   ├── 📁 serverAction
+│   │   │   ├── 📄 adminAction.ts
+│   │   │   ├── 📄 alert.ts
+│   │   │   ├── 📄 auth.ts
+│   │   │   ├── 📄 coin.ts
+│   │   │   └── 📄 user.ts
+│   │   ├── 📁 serverFetch
+│   │   │   ├── 📄 adminFetch.ts
+│   │   │   ├── 📄 index.ts
+│   │   │   ├── ⚙️ mockCoinData.json
+│   │   │   ├── ⚙️ mockCoinList.json
+│   │   │   └── ⚙️ mockHistoryData.json
+│   │   └── 📄 index.ts
+│   ├── 📁 provider
+│   │   ├── 📁 AuthProvider
+│   │   │   └── 📄 index.tsx
+│   │   └── 📁 ThemeProvider
+│   │       └── 📄 index.tsx
+│   ├── 📁 types
+│   │   ├── 📄 alert.ts
+│   │   ├── 📄 coin.ts
+│   │   ├── 📄 global.d.ts
+│   │   └── 📄 user.ts
+│   ├── 📁 views
+│   │   ├── 📁 admin
+│   │   │   ├── 📄 DashboardView.tsx
+│   │   │   ├── 📄 PaymentsView.tsx
+│   │   │   └── 📄 UsersView.tsx
+│   │   ├── 📁 alert
+│   │   │   ├── 📁 components
+│   │   │   │   ├── 📁 AddAlertModal
+│   │   │   │   │   └── 📄 index.tsx
+│   │   │   │   ├── 📁 CoinSymbolSelect
+│   │   │   │   │   └── 📄 index.tsx
+│   │   │   │   ├── 📁 TriggerForm
+│   │   │   │   │   └── 📄 index.tsx
+│   │   │   │   └── 📁 TriggerList
+│   │   │   │       ├── 📄 TriggerModal.tsx
+│   │   │   │       └── 📄 index.tsx
+│   │   │   └── 📄 index.tsx
+│   │   ├── 📁 authentication
+│   │   │   ├── 📁 ForgotPasswordForm
+│   │   │   │   ├── 📄 ResetPasswordForm.tsx
+│   │   │   │   ├── 📄 SendEmailForm.tsx
+│   │   │   │   └── 📄 index.tsx
+│   │   │   ├── 📁 SigninForm
+│   │   │   │   └── 📄 index.tsx
+│   │   │   ├── 📁 SignupForm
+│   │   │   │   └── 📄 index.tsx
+│   │   │   └── 📁 components
+│   │   │       ├── 📁 ConfirmButton
+│   │   │       │   └── 📄 index.tsx
+│   │   │       └── 📁 ContinueButton
+│   │   │           └── 📄 index.tsx
+│   │   ├── 📁 coin
+│   │   │   ├── 📄 Breadcrumbs.tsx
+│   │   │   ├── 📄 CoinDetail.tsx
+│   │   │   ├── 📄 HistoryChart.tsx
+│   │   │   ├── 📄 KlineChart.tsx
+│   │   │   ├── 📄 MarketReplay.tsx
+│   │   │   └── 📄 SidebarStats.tsx
+│   │   ├── 📁 landing_page
+│   │   │   └── 📄 HeroSection.tsx
+│   │   ├── 📁 market
+│   │   │   ├── 📄 CoinList.tsx
+│   │   │   ├── 📄 Pagnitation.tsx
+│   │   │   └── 📄 SearchInput.tsx
+│   │   └── 📁 user_profile
+│   │       ├── 📄 UserActionModal.tsx
+│   │       └── 📄 index.tsx
+│   └── 📄 middleware.ts
+├── ⚙️ .env.example
+├── ⚙️ .eslintrc.json
+├── ⚙️ .gitignore
+├── ⚙️ .hintrc
+├── 🐳 Dockerfile
+├── 📝 README.md
+├── 📄 next.config.mjs
+├── ⚙️ package-lock.json
+├── ⚙️ package.json
+├── 📄 postcss.config.mjs
+├── 📄 tailwind.config.ts
+└── ⚙️ tsconfig.json
 
-For more details, please refer to the **Contributing Guide**.
+QLDAPM-backend/
+├── 📁 .claude
+│   └── ⚙️ settings.local.json
+├── 📁 .github
+│   └── 📁 workflows
+│       ├── ⚙️ ci.yml
+│       └── ⚙️ deploy.yml
+├── 📁 src
+│   ├── 📁 config
+│   │   └── 📄 database.js
+│   ├── 📁 middlewares
+│   │   ├── 📄 authMiddleware.js
+│   │   └── 📄 upload.js
+│   ├── 📁 scripts
+│   │   └── 📄 makeAdmin.js
+│   ├── 📁 services
+│   │   ├── 📁 admin
+│   │   │   ├── 📁 controllers
+│   │   │   │   ├── 📄 adminController.js
+│   │   │   │   ├── 📄 authController.js
+│   │   │   │   ├── 📄 googleController.js
+│   │   │   │   ├── 📄 paymentController.js
+│   │   │   │   └── 📄 userController.js
+│   │   │   ├── 📁 models
+│   │   │   │   ├── 📄 Order.js
+│   │   │   │   └── 📄 User.js
+│   │   │   ├── 📁 momo
+│   │   │   │   ├── 📄 momoCallback.js
+│   │   │   │   └── 📄 momoPayment.js
+│   │   │   ├── 📁 routes
+│   │   │   │   └── 📄 routes.js
+│   │   │   └── 📁 utils
+│   │   │       ├── 📄 cleanupUtils.js
+│   │   │       ├── 📄 emailUtils.js
+│   │   │       ├── 📄 googleVerify.js
+│   │   │       ├── 📄 tokenUtils.js
+│   │   │       ├── 📄 upgradeAmount.js
+│   │   │       └── 📄 validation.js
+│   │   ├── 📁 price
+│   │   │   ├── 📁 controllers
+│   │   │   │   ├── 📄 fundingRate.js
+│   │   │   │   ├── 📄 futurePrice.js
+│   │   │   │   ├── 📄 kline.js
+│   │   │   │   └── 📄 spotPrice.js
+│   │   │   ├── 📁 routes
+│   │   │   │   └── 📄 routes.js
+│   │   │   ├── 📁 utils
+│   │   │   │   └── 📄 showError.js
+│   │   │   └── 📁 websocket
+│   │   │       ├── 📄 fundingRateSocket.js
+│   │   │       ├── 📄 futurePriceSocket.js
+│   │   │       ├── 📄 klineSocket.js
+│   │   │       ├── 📄 marketCapSocket.js
+│   │   │       └── 📄 spotPriceSocket.js
+│   │   └── 📁 trigger
+│   │       ├── 📁 controllers
+│   │       │   ├── 📄 alertHandler.js
+│   │       │   ├── 📄 indicatorHandler.js
+│   │       │   ├── 📄 symbolAlert.js
+│   │       │   └── 📄 userHandler.js
+│   │       ├── 📁 models
+│   │       │   └── 📄 Alert.js
+│   │       ├── 📁 routes
+│   │       │   └── 📄 routes.js
+│   │       ├── 📁 services
+│   │       │   ├── 📄 alertChecker.js
+│   │       │   └── 📄 alertLogic.js
+│   │       └── 📁 utils
+│   │           └── 📄 alertEmail.js
+│   └── 📄 app.js
+├── 📁 uploads
+├── ⚙️ .dockerignore
+├── ⚙️ .env.example
+├── ⚙️ .gitignore
+├── 🐳 Dockerfile
+├── ⚙️ docker-compose.yml
+├── ⚙️ package-lock.json
+└── ⚙️ package.json
+```
+---
+
+## 👥 Thành viên
+
+| Họ và tên             | MSSV    | Email                              |
+| --------------------- | ------- | ---------------------------------- |
+| HỒ QUỐC KHƯƠNG        | 2211709 | khuong.hobknet4869@hcmut.edu.vn    |
+| HUỲNH ANH CHÍ KIỆT    | 2013563 | kiet.huynh100@hcmut.edu.vn         |
+| NGUYỄN TRUNG KIÊN     | 2211729 | kien.nguyenkien130804@hcmut.edu.vn |
+| PHAN HUY THỊNH        | 2313305 | thinh.phanheavything@hcmut.edu.vn  |
+| THÁI KIM LONG         | 2211899 | long.thai1210@hcmut.edu.vn         |
+| NGUYỄN ĐĂNG KHOA      | 2211620 | khoa.nguyen21924@hcmut.edu.vn      |
+| NGUYỄN NGỌC THÀNH ĐẠT | 2111013 | dat.nguyen0412@hcmut.edu.vn        |
+| NGUYỄN ĐỨC PHƯƠNG     | 2312749 | phuong.nguyendph10623@hcmut.edu.vn |
 
 ---
 
-### **Contact**
+<div align="center">
 
-Team Members: **Note that the Student ID will not be appear again in Meeting Minutes Reports**
+**Made with care for QLDAPM Frontend**
 
-| Họ và Tên | Mã Số Sinh Viên | Roles |
-| --------- | --------------- | ----- |
-
----
+</div>
