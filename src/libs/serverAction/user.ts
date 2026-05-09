@@ -7,7 +7,6 @@ import {
     ChangeEmailPayload,
     ChangePasswordPayload,
     DepositCoinPayload,
-    PurchaseVIPPayload,
     UpdateUserInformationPayload,
 } from '../../types/user';
 

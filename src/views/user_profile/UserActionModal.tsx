@@ -1,4 +1,4 @@
-import { ServerUrl, BaseUrl } from '@/src/libs';
+import { ServerUrl } from '@/src/libs';
 import { refreshToken } from '@/src/libs/serverAction/auth';
 import {
     changePassword,
@@ -13,7 +13,6 @@ import { useAuth } from '@/src/provider/AuthProvider';
 import {
     ChangePasswordPayload,
     DepositCoinPayload,
-    PurchaseVIPPayload,
 } from '@/src/types/user';
 import {
     Avatar,
@@ -599,7 +598,6 @@ function Deposit({ onOpenChange }: formProps) {
 
 function PurchaseVIP() {
     const router = useRouter();
-    const { basicUserInfor } = useAuth();
     const [roles, setRoles] = useState<any[]>([]);
     const [loadingRoles, setLoadingRoles] = useState(true);
     const [selectedRole, setSelectedRole] = useState<string>('');
