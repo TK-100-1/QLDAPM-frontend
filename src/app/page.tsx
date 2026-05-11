@@ -1,6 +1,7 @@
 import LandingPage from "./(public)/landing_page/LandingPage";
 import { fetchInfo } from "@/src/libs/serverFetch";
 import AuthProvider from "@/src/provider/AuthProvider";
+export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   let basicUserInfor = null;

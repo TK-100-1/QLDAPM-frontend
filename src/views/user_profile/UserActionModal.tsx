@@ -653,7 +653,7 @@ function PurchaseVIP() {
           clearInterval(interval);
           setPolling(false);
           toast.success(
-            `Thanh toán thành công, tài khoản đã được nâng cấp lên gói ${selectedRole}`,
+            `Payment successful, account has been upgraded to the new package ${selectedRole}`,
           );
           // The server action already handles the token if the backend returned one,
           // but we might need to refresh the page to see changes.
@@ -748,7 +748,9 @@ function PurchaseVIP() {
                   <CardBody className="py-4">
                     {!isAvailable && (
                       <div className="text-center text-sm font-semibold text-danger mb-3">
-                        {userWeight >= roleW ? "Đã sở hữu" : "Không khả dụng"}
+                        {userWeight >= roleW
+                          ? "Already owned"
+                          : "Not available for your current VIP level"}
                       </div>
                     )}
                     <ul className="text-sm text-default-600 flex flex-col gap-3">
