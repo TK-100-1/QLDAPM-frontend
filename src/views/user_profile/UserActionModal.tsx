@@ -1,399 +1,375 @@
-import { ServerUrl, BaseUrl } from '@/src/libs';
-import { refreshToken } from '@/src/libs/serverAction/auth';
+import { ServerUrl } from "@/src/libs";
+import { refreshToken } from "@/src/libs/serverAction/auth";
 import {
-    changePassword,
-    deposit,
-    purchaseVIP,
-    updateUserInformation,
-    uploadAvatar,
-    fetchAvailableRoles,
-    checkPaymentStatus,
-} from '@/src/libs/serverAction/user';
-import { useAuth } from '@/src/provider/AuthProvider';
+  changePassword,
+  deposit,
+  purchaseVIP,
+  updateUserInformation,
+  uploadAvatar,
+  fetchAvailableRoles,
+  checkPaymentStatus,
+} from "@/src/libs/serverAction/user";
+import { useAuth } from "@/src/provider/AuthProvider";
+import { ChangePasswordPayload, DepositCoinPayload } from "@/src/types/user";
 import {
-    ChangePasswordPayload,
-    DepositCoinPayload,
-    PurchaseVIPPayload,
-} from '@/src/types/user';
-import {
-    Avatar,
-    Button,
-    Input,
-    Modal,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    Select,
-    SelectItem,
-} from '@nextui-org/react';
-import { Camera, Eye, EyeSlash, Wallet } from '@phosphor-icons/react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+  Avatar,
+  Button,
+  Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  Card,
+  CardHeader,
+  CardBody,
+  Divider,
+} from "@nextui-org/react";
+import { Camera, Eye, EyeSlash, Wallet } from "@phosphor-icons/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { PERMISSIONS_LIST } from "../admin/RolesView";
 
 interface Props {
-    isOpen: boolean;
-    onOpenChange: () => void;
-    actionType: 'changePassword' | 'updateInfo' | 'deposit' | 'purchaseVIP';
+  isOpen: boolean;
+  onOpenChange: () => void;
+  actionType: "changePassword" | "updateInfo" | "deposit" | "purchaseVIP";
 }
 
 export default function UserActionModal({
-    isOpen,
-    onOpenChange,
-    actionType,
+  isOpen,
+  onOpenChange,
+  actionType,
 }: Props) {
-    const renderModal = () => {
-        switch (actionType) {
-            case 'changePassword':
-                return <ChangePassword onOpenChange={onOpenChange} />;
-            case 'updateInfo':
-                return <UpdateUserInformation onOpenChange={onOpenChange} />;
-            case 'deposit':
-                return <Deposit onOpenChange={onOpenChange} />;
-            case 'purchaseVIP':
-                return <PurchaseVIP />;
-            default:
-                return null;
-        }
-    };
+  const renderModal = () => {
+    switch (actionType) {
+      case "changePassword":
+        return <ChangePassword onOpenChange={onOpenChange} />;
+      case "updateInfo":
+        return <UpdateUserInformation onOpenChange={onOpenChange} />;
+      case "deposit":
+        return <Deposit onOpenChange={onOpenChange} />;
+      case "purchaseVIP":
+        return <PurchaseVIP />;
+      default:
+        return null;
+    }
+  };
 
-    return (
-        <Modal
-            disableAnimation
-            size="md"
-            radius="lg"
-            placement="center"
-            isOpen={isOpen}
-            onOpenChange={onOpenChange}
-        >
-            {renderModal()}
-        </Modal>
-    );
+  return (
+    <Modal
+      disableAnimation
+      size={actionType === "purchaseVIP" ? "3xl" : "md"}
+      radius="lg"
+      placement="center"
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+    >
+      {renderModal()}
+    </Modal>
+  );
 }
 
 interface formProps {
-    onOpenChange: () => void;
+  onOpenChange: () => void;
 }
 
 function ChangePassword({ onOpenChange }: formProps) {
-    const [formData, setFormData] = useState<ChangePasswordPayload>({
-        current_password: '',
-        new_password: '',
-        confirm_new_password: '',
-    });
-    const [showPass, setShowPass] = useState({
-        current: false,
-        new: false,
-        confirm: false,
-    });
+  const [formData, setFormData] = useState<ChangePasswordPayload>({
+    current_password: "",
+    new_password: "",
+    confirm_new_password: "",
+  });
+  const [showPass, setShowPass] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
 
-    const onSubmit = async () => {
-        if (
-            formData.current_password === '' ||
-            formData.new_password === '' ||
-            formData.confirm_new_password === ''
-        ) {
-            toast.error('Please fill in all fields');
-            return;
-        }
+  const onSubmit = async () => {
+    if (
+      formData.current_password === "" ||
+      formData.new_password === "" ||
+      formData.confirm_new_password === ""
+    ) {
+      toast.error("Please fill in all fields");
+      return;
+    }
 
-        if (formData.new_password !== formData.confirm_new_password) {
-            toast.error('New passwords do not match');
-            return;
-        }
+    if (formData.new_password !== formData.confirm_new_password) {
+      toast.error("New passwords do not match");
+      return;
+    }
 
-        await refreshToken();
-        const res = await changePassword(formData);
+    await refreshToken();
+    const res = await changePassword(formData);
 
-        if (res.success) {
-            toast.success(res.message);
-            onOpenChange();
-        } else {
-            toast.error(res.message);
-        }
-    };
+    if (res.success) {
+      toast.success(res.message);
+      onOpenChange();
+    } else {
+      toast.error(res.message);
+    }
+  };
 
-    return (
-        <ModalContent className="p-4">
-            <ModalHeader className="flex flex-col items-center gap-2 pb-0">
-                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-2">
-                    <Wallet size={32} className="text-blue-500" />{' '}
-                    {/* Using Wallet as a placeholder icon for "Change Password" based on screenshot 2 */}
-                </div>
-                <h2 className="text-2xl font-bold">Change Password</h2>
-                <p className="text-sm text-slate-400 font-normal">
-                    Please enter your details to update password
-                </p>
-            </ModalHeader>
-            <ModalBody className="gap-4 py-6">
-                <Input
-                    radius="sm"
-                    label="Current Password"
-                    placeholder="Enter current password"
-                    type={showPass.current ? 'text' : 'password'}
-                    variant="bordered"
-                    endContent={
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setShowPass({
-                                    ...showPass,
-                                    current: !showPass.current,
-                                })
-                            }
-                        >
-                            {showPass.current ? (
-                                <EyeSlash size={20} />
-                            ) : (
-                                <Eye size={20} />
-                            )}
-                        </button>
-                    }
-                    value={formData.current_password}
-                    onChange={(e) =>
-                        setFormData({
-                            ...formData,
-                            current_password: e.target.value,
-                        })
-                    }
-                />
-                <Input
-                    radius="sm"
-                    label="New Password"
-                    placeholder="Minimum 8 characters"
-                    type={showPass.new ? 'text' : 'password'}
-                    variant="bordered"
-                    endContent={
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setShowPass({ ...showPass, new: !showPass.new })
-                            }
-                        >
-                            {showPass.new ? (
-                                <EyeSlash size={20} />
-                            ) : (
-                                <Eye size={20} />
-                            )}
-                        </button>
-                    }
-                    value={formData.new_password}
-                    onChange={(e) =>
-                        setFormData({
-                            ...formData,
-                            new_password: e.target.value,
-                        })
-                    }
-                />
-                <Input
-                    radius="sm"
-                    label="Confirm New Password"
-                    placeholder="Re-type new password"
-                    type={showPass.confirm ? 'text' : 'password'}
-                    variant="bordered"
-                    endContent={
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setShowPass({
-                                    ...showPass,
-                                    confirm: !showPass.confirm,
-                                })
-                            }
-                        >
-                            {showPass.confirm ? (
-                                <EyeSlash size={18} />
-                            ) : (
-                                <Eye size={18} />
-                            )}
-                        </button>
-                    }
-                    value={formData.confirm_new_password}
-                    onChange={(e) =>
-                        setFormData({
-                            ...formData,
-                            confirm_new_password: e.target.value,
-                        })
-                    }
-                />
-            </ModalBody>
-            <ModalFooter className="flex-col gap-2">
-                <Button
-                    color="primary"
-                    className="w-full text-lg font-bold py-6"
-                    onClick={onSubmit}
-                >
-                    Update Password
-                </Button>
-                <Button
-                    variant="light"
-                    className="w-full"
-                    onClick={onOpenChange}
-                >
-                    Cancel
-                </Button>
-            </ModalFooter>
-        </ModalContent>
-    );
+  return (
+    <ModalContent className="p-4">
+      <ModalHeader className="flex flex-col items-center gap-2 pb-0">
+        <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-2">
+          <Wallet size={32} className="text-blue-500" />{" "}
+          {/* Using Wallet as a placeholder icon for "Change Password" based on screenshot 2 */}
+        </div>
+        <h2 className="text-2xl font-bold">Change Password</h2>
+        <p className="text-sm text-slate-400 font-normal">
+          Please enter your details to update password
+        </p>
+      </ModalHeader>
+      <ModalBody className="gap-4 py-6">
+        <Input
+          radius="sm"
+          label="Current Password"
+          placeholder="Enter current password"
+          type={showPass.current ? "text" : "password"}
+          variant="bordered"
+          endContent={
+            <button
+              type="button"
+              onClick={() =>
+                setShowPass({
+                  ...showPass,
+                  current: !showPass.current,
+                })
+              }
+            >
+              {showPass.current ? <EyeSlash size={20} /> : <Eye size={20} />}
+            </button>
+          }
+          value={formData.current_password}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              current_password: e.target.value,
+            })
+          }
+        />
+        <Input
+          radius="sm"
+          label="New Password"
+          placeholder="Minimum 8 characters"
+          type={showPass.new ? "text" : "password"}
+          variant="bordered"
+          endContent={
+            <button
+              type="button"
+              onClick={() => setShowPass({ ...showPass, new: !showPass.new })}
+            >
+              {showPass.new ? <EyeSlash size={20} /> : <Eye size={20} />}
+            </button>
+          }
+          value={formData.new_password}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              new_password: e.target.value,
+            })
+          }
+        />
+        <Input
+          radius="sm"
+          label="Confirm New Password"
+          placeholder="Re-type new password"
+          type={showPass.confirm ? "text" : "password"}
+          variant="bordered"
+          endContent={
+            <button
+              type="button"
+              onClick={() =>
+                setShowPass({
+                  ...showPass,
+                  confirm: !showPass.confirm,
+                })
+              }
+            >
+              {showPass.confirm ? <EyeSlash size={18} /> : <Eye size={18} />}
+            </button>
+          }
+          value={formData.confirm_new_password}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              confirm_new_password: e.target.value,
+            })
+          }
+        />
+      </ModalBody>
+      <ModalFooter className="flex-col gap-2">
+        <Button
+          color="primary"
+          className="w-full text-lg font-bold py-6"
+          onClick={onSubmit}
+        >
+          Update Password
+        </Button>
+        <Button variant="light" className="w-full" onClick={onOpenChange}>
+          Cancel
+        </Button>
+      </ModalFooter>
+    </ModalContent>
+  );
 }
 
 function UpdateUserInformation({ onOpenChange }: formProps) {
-    const { basicUserInfor } = useAuth();
-    const router = useRouter();
+  const { basicUserInfor } = useAuth();
+  const router = useRouter();
 
-    const [formData, setFormData] = useState({
-        username: basicUserInfor?.username || '',
-        email: basicUserInfor?.email || '',
-    });
+  const [formData, setFormData] = useState({
+    username: basicUserInfor?.username || "",
+    email: basicUserInfor?.email || "",
+  });
 
-    const [avatar, setAvatar] = useState<File | null>(null);
-    const [preview, setPreview] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+  const [avatar, setAvatar] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-    const handleFileChange = (e: any) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+  const handleFileChange = (e: any) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-        if (!file.type.startsWith('image/')) {
-            toast.error('Only image allowed');
-            return;
-        }
+    if (!file.type.startsWith("image/")) {
+      toast.error("Only image allowed");
+      return;
+    }
 
-        if (file.size > 2 * 1024 * 1024) {
-            toast.error('Max size 2MB');
-            return;
-        }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Max size 2MB");
+      return;
+    }
 
-        setAvatar(file);
+    setAvatar(file);
 
-        const previewUrl = URL.createObjectURL(file);
-        setPreview(previewUrl);
+    const previewUrl = URL.createObjectURL(file);
+    setPreview(previewUrl);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
     };
+  }, [preview]);
 
-    useEffect(() => {
-        return () => {
-            if (preview) URL.revokeObjectURL(preview);
-        };
-    }, [preview]);
+  const onSubmit = async () => {
+    if (!formData.username || !formData.email) {
+      toast.error("Please fill in all fields");
+      return;
+    }
 
-    const onSubmit = async () => {
-        if (!formData.username || !formData.email) {
-            toast.error('Please fill in all fields');
-            return;
+    try {
+      setLoading(true);
+
+      await refreshToken();
+
+      const res1 = await updateUserInformation({
+        username: formData.username,
+        email: formData.email,
+      });
+
+      if (!res1.success) {
+        toast.error(res1.message);
+        return;
+      }
+
+      if (avatar) {
+        const form = new FormData();
+        form.append("avatar", avatar);
+
+        const res2 = await uploadAvatar(form);
+
+        if (!res2.success) {
+          toast.error(res2.message);
+          return;
         }
+      }
 
-        try {
-            setLoading(true);
+      toast.success("Updated successfully");
 
-            await refreshToken();
+      setAvatar(null);
+      setPreview(null);
 
-            const res1 = await updateUserInformation({
-                username: formData.username,
-                email: formData.email,
-            });
+      onOpenChange();
+      router.refresh();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error: any) {
+      toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            if (!res1.success) {
-                toast.error(res1.message);
-                return;
-            }
+  const avatarUrl = preview
+    ? preview
+    : basicUserInfor?.avatar
+      ? `${ServerUrl}${basicUserInfor.avatar}`
+      : "/user.svg";
 
-            if (avatar) {
-                const form = new FormData();
-                form.append('avatar', avatar);
+  return (
+    <ModalContent className="p-4">
+      <ModalHeader className="flex flex-col items-center gap-2">
+        <h2 className="text-2xl font-bold">Update User Information</h2>
+      </ModalHeader>
 
-                const res2 = await uploadAvatar(form);
+      <ModalBody className="gap-6 py-4">
+        <input
+          type="file"
+          id="avatarInput"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
 
-                if (!res2.success) {
-                    toast.error(res2.message);
-                    return;
-                }
-            }
+        <div className="flex flex-col items-center">
+          <div className="relative">
+            <Avatar src={avatarUrl} className="w-24 h-24 object-cover" />
 
-            toast.success('Updated successfully');
+            <div
+              onClick={() => document.getElementById("avatarInput")?.click()}
+              className="absolute bottom-0 right-0 bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600"
+            >
+              <Camera size={16} className="text-white" />
+            </div>
+          </div>
+        </div>
 
-            setAvatar(null);
-            setPreview(null);
+        <Input
+          label="Username"
+          value={formData.username}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              username: e.target.value,
+            })
+          }
+        />
 
-            onOpenChange();
-            router.refresh();
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (error: any) {
-            toast.error('Something went wrong');
-        } finally {
-            setLoading(false);
-        }
-    };
+        <Input
+          label="Email"
+          value={formData.email}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              email: e.target.value,
+            })
+          }
+        />
+      </ModalBody>
 
-    const avatarUrl = preview
-        ? preview
-        : basicUserInfor?.avatar
-            ? `${ServerUrl}${basicUserInfor.avatar}`
-            : '/user.svg';
-
-    return (
-        <ModalContent className="p-4">
-            <ModalHeader className="flex flex-col items-center gap-2">
-                <h2 className="text-2xl font-bold">Update User Information</h2>
-            </ModalHeader>
-
-            <ModalBody className="gap-6 py-4">
-                <input
-                    type="file"
-                    id="avatarInput"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileChange}
-                />
-
-                <div className="flex flex-col items-center">
-                    <div className="relative">
-                        <Avatar
-                            src={avatarUrl}
-                            className="w-24 h-24 object-cover"
-                        />
-
-                        <div
-                            onClick={() =>
-                                document.getElementById('avatarInput')?.click()
-                            }
-                            className="absolute bottom-0 right-0 bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600"
-                        >
-                            <Camera size={16} className="text-white" />
-                        </div>
-                    </div>
-                </div>
-
-                <Input
-                    label="Username"
-                    value={formData.username}
-                    onChange={(e) =>
-                        setFormData({
-                            ...formData,
-                            username: e.target.value,
-                        })
-                    }
-                />
-
-                <Input
-                    label="Email"
-                    value={formData.email}
-                    onChange={(e) =>
-                        setFormData({
-                            ...formData,
-                            email: e.target.value,
-                        })
-                    }
-                />
-            </ModalBody>
-
-            <ModalFooter>
-                <Button color="primary" onClick={onSubmit} isLoading={loading}>
-                    Save
-                </Button>
-            </ModalFooter>
-        </ModalContent>
-    );
+      <ModalFooter>
+        <Button color="primary" onClick={onSubmit} isLoading={loading}>
+          Save
+        </Button>
+      </ModalFooter>
+    </ModalContent>
+  );
 }
 
 // function UpdateUserInformation({ onOpenChange }: formProps) {
@@ -539,199 +515,272 @@ function UpdateUserInformation({ onOpenChange }: formProps) {
 // }
 
 function Deposit({ onOpenChange }: formProps) {
-    const router = useRouter();
-    const [formData, setFormData] = useState<DepositCoinPayload>({
+  const router = useRouter();
+  const [formData, setFormData] = useState<DepositCoinPayload>({
+    amount: 0,
+  });
+
+  const onSubmit = async () => {
+    if (formData.amount === 0) {
+      toast.error("Amount cannot be 0");
+      return;
+    }
+
+    await refreshToken();
+
+    const res = await deposit(formData);
+
+    if (res.success) {
+      toast.success(res.message);
+      setFormData({
         amount: 0,
-    });
+      });
+      onOpenChange();
+      router.refresh();
+    } else {
+      toast.error(res.message);
+    }
+  };
 
-    const onSubmit = async () => {
-        if (formData.amount === 0) {
-            toast.error('Amount cannot be 0');
-            return;
-        }
-
-        await refreshToken();
-
-        const res = await deposit(formData);
-
-        if (res.success) {
-            toast.success(res.message);
+  return (
+    <ModalContent>
+      <ModalHeader className="flex flex-col gap-1 text-2xl">
+        Deposit coin
+      </ModalHeader>
+      <ModalBody>
+        <Input
+          radius="sm"
+          label="Amount"
+          placeholder="Enter amount you want to deposit"
+          type="text"
+          value={formData.amount.toString()}
+          onChange={(e) => {
+            if (isNaN(Number(e.target.value))) {
+              return;
+            }
             setFormData({
-                amount: 0,
+              amount: Number(e.target.value),
             });
-            onOpenChange();
-            router.refresh();
-        } else {
-            toast.error(res.message);
-        }
-    };
-
-    return (
-        <ModalContent>
-            <ModalHeader className="flex flex-col gap-1 text-2xl">
-                Deposit coin
-            </ModalHeader>
-            <ModalBody>
-                <Input
-                    radius="sm"
-                    label="Amount"
-                    placeholder="Enter amount you want to deposit"
-                    type="text"
-                    value={formData.amount.toString()}
-                    onChange={(e) => {
-                        if (isNaN(Number(e.target.value))) {
-                            return;
-                        }
-                        setFormData({
-                            amount: Number(e.target.value),
-                        });
-                    }}
-                />
-            </ModalBody>
-            <ModalFooter>
-                <Button color="primary" onClick={onSubmit}>
-                    Confirm
-                </Button>
-            </ModalFooter>
-        </ModalContent>
-    );
+          }}
+        />
+      </ModalBody>
+      <ModalFooter>
+        <Button color="primary" onClick={onSubmit}>
+          Confirm
+        </Button>
+      </ModalFooter>
+    </ModalContent>
+  );
 }
 
 function PurchaseVIP() {
-    const router = useRouter();
-    const { basicUserInfor } = useAuth();
-    const [roles, setRoles] = useState<any[]>([]);
-    const [loadingRoles, setLoadingRoles] = useState(true);
-    const [selectedRole, setSelectedRole] = useState<string>('');
-    const [qrData, setQrData] = useState<{ url: string; orderId: string } | null>(null);
-    const [polling, setPolling] = useState(false);
+  const router = useRouter();
+  const { basicUserInfor } = useAuth();
+  const [roles, setRoles] = useState<any[]>([]);
+  const [loadingRoles, setLoadingRoles] = useState(true);
+  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [qrData, setQrData] = useState<{ url: string; orderId: string } | null>(
+    null,
+  );
+  const [polling, setPolling] = useState(false);
 
-    useEffect(() => {
-        const loadRoles = async () => {
-            try {
-                const data = await fetchAvailableRoles();
-                if (data.success && data.data) {
-                    // Filter roles that have price > 0
-                    setRoles(data.data.filter((r: any) => r.price > 0));
-                }
-            } catch (err) {
-                console.error("Failed to load roles", err);
-            } finally {
-                setLoadingRoles(false);
-            }
-        };
-        loadRoles();
-    }, []);
+  const roleWeight: Record<string, number> = {
+    "VIP-0": 0,
+    "vip-0": 0,
+    VIP_0: 0,
+    vip_0: 0,
+    "VIP-1": 1,
+    "vip-1": 1,
+    VIP_1: 1,
+    vip_1: 1,
+    "VIP-2": 2,
+    "vip-2": 2,
+    VIP_2: 2,
+    vip_2: 2,
+    "VIP-3": 3,
+    "vip-3": 3,
+    VIP_3: 3,
+    vip_3: 3,
+    user: 0,
+    Admin: 99,
+  };
+  const userRole =
+    basicUserInfor?.vip_level || (basicUserInfor as any)?.role || "VIP-0";
+  const userWeight = roleWeight[userRole] ?? 0;
 
-    const onSubmit = async () => {
-        if (!selectedRole) {
-            toast.error("Please select a VIP role to purchase");
-            return;
+  useEffect(() => {
+    const loadRoles = async () => {
+      try {
+        const data = await fetchAvailableRoles();
+        if (data.success && data.data) {
+          // Filter roles that have price > 0
+          setRoles(data.data.filter((r: any) => r.price > 0));
         }
-
-        await refreshToken();
-
-        const res = await purchaseVIP({ role_name: selectedRole });
-
-        if (res.success && res.data) {
-            setQrData({ url: res.data.payment_url, orderId: res.data.order_id });
-            startPolling(res.data.order_id);
-        } else {
-            toast.error(res.message);
-        }
+      } catch (err) {
+        console.error("Failed to load roles", err);
+      } finally {
+        setLoadingRoles(false);
+      }
     };
+    loadRoles();
+  }, []);
 
-    const startPolling = (orderId: string) => {
-        setPolling(true);
-        const interval = setInterval(async () => {
-            try {
-                const res = await checkPaymentStatus(orderId);
-                if (res.success && res.status === '0') { // success
-                    clearInterval(interval);
-                    setPolling(false);
-                    toast.success("Payment successful! VIP upgraded.");
-                    // The server action already handles the token if the backend returned one,
-                    // but we might need to refresh the page to see changes.
-                    router.refresh();
-                    window.location.reload();
-                } else if (res.success && res.status === 'failed') {
-                    clearInterval(interval);
-                    setPolling(false);
-                    toast.error("Payment expired or failed.");
-                }
-            } catch (err) {
-                console.error(err);
-            }
-        }, 5000); // poll every 5s
-
-        // Stop polling after 15 mins (900s)
-        setTimeout(() => {
-            clearInterval(interval);
-            setPolling(false);
-        }, 15 * 60 * 1000);
-    };
-
-    if (qrData) {
-        return (
-            <ModalContent>
-                <ModalHeader className="flex flex-col gap-1 text-2xl">
-                    Scan to Pay
-                </ModalHeader>
-                <ModalBody className="flex flex-col items-center py-6">
-                    <img src={qrData.url} alt="VietQR" className="w-64 h-64 border rounded-xl shadow-sm" />
-                    <p className="mt-4 text-center text-default-500">
-                        Scan this QR code with your banking app to upgrade your VIP level.
-                    </p>
-                    {polling && (
-                        <div className="mt-4 flex items-center gap-2 text-primary font-medium">
-                            <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></span>
-                            Waiting for payment...
-                        </div>
-                    )}
-                </ModalBody>
-                <ModalFooter>
-                    <Button color="primary" onClick={() => {
-                        toast.info("Please wait for system confirmation. You can safely close this popup if you have already paid.");
-                    }}>
-                        I have paid
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        );
+  const onSubmit = async () => {
+    if (!selectedRole) {
+      toast.error("Please select a VIP role to purchase");
+      return;
     }
 
-    return (
-        <ModalContent>
-            <ModalHeader className="flex flex-col gap-1 text-2xl">
-                Purchase VIP
-            </ModalHeader>
-            <ModalBody>
-                {loadingRoles ? (
-                    <div>Loading available roles...</div>
-                ) : roles.length > 0 ? (
-                    <Select
-                        disableAnimation
-                        placeholder="Select VIP package"
-                        selectedKeys={selectedRole ? [selectedRole] : []}
-                        onChange={(e) => setSelectedRole(e.target.value)}
-                    >
-                        {roles.map((r) => (
-                            <SelectItem key={r.name} value={r.name}>
-                                {r.name} - {r.price.toLocaleString()} VND
-                            </SelectItem>
-                        ))}
-                    </Select>
-                ) : (
-                    <div>No VIP packages available right now.</div>
-                )}
-            </ModalBody>
-            <ModalFooter>
-                {roles.length > 0 && (
-                    <Button color="primary" onClick={onSubmit}>
-                        Confirm
-                    </Button>
-                )}
-            </ModalFooter>
-        </ModalContent>
+    await refreshToken();
+
+    const res = await purchaseVIP({ role_name: selectedRole });
+
+    if (res.success && res.data) {
+      setQrData({ url: res.data.payment_url, orderId: res.data.order_id });
+      startPolling(res.data.order_id);
+    } else {
+      toast.error(res.message);
+    }
+  };
+
+  const startPolling = (orderId: string) => {
+    setPolling(true);
+    const interval = setInterval(async () => {
+      try {
+        const res = await checkPaymentStatus(orderId);
+        if (res.success && res.status === "0") {
+          // success
+          clearInterval(interval);
+          setPolling(false);
+          toast.success(
+            `Thanh toán thành công, tài khoản đã được nâng cấp lên gói ${selectedRole}`,
+          );
+          // The server action already handles the token if the backend returned one,
+          // but we might need to refresh the page to see changes.
+          router.refresh();
+          window.location.reload();
+        } else if (res.success && res.status === "failed") {
+          clearInterval(interval);
+          setPolling(false);
+          toast.error("Payment expired or failed.");
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }, 5000); // poll every 5s
+
+    // Stop polling after 15 mins (900s)
+    setTimeout(
+      () => {
+        clearInterval(interval);
+        setPolling(false);
+      },
+      15 * 60 * 1000,
     );
+  };
+
+  if (qrData) {
+    return (
+      <ModalContent>
+        <ModalHeader className="flex flex-col gap-1 text-2xl">
+          Scan to Pay
+        </ModalHeader>
+        <ModalBody className="flex flex-col items-center py-6">
+          <img
+            src={qrData.url}
+            alt="VietQR"
+            className="w-64 h-64 border rounded-xl shadow-sm"
+          />
+          <p className="mt-4 text-center text-default-500">
+            Scan this QR code with your banking app to upgrade your VIP level.
+          </p>
+          {polling && (
+            <div className="mt-4 flex items-center gap-2 text-primary font-medium">
+              <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></span>
+              Waiting for payment...
+            </div>
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            color="primary"
+            onClick={() => {
+              toast.info(
+                "Please wait for system confirmation. You can safely close this popup if you have already paid.",
+              );
+            }}
+          >
+            I have paid
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    );
+  }
+
+  return (
+    <ModalContent>
+      <ModalHeader className="flex flex-col gap-1 text-2xl">
+        Purchase VIP
+      </ModalHeader>
+      <ModalBody>
+        {loadingRoles ? (
+          <div>Loading available roles...</div>
+        ) : roles.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+            {roles.map((r) => {
+              const roleW = roleWeight[r.name] ?? 99;
+              const isAvailable = roleW > userWeight;
+              const isSelected = selectedRole === r.name;
+              return (
+                <Card
+                  key={r.name}
+                  isPressable={isAvailable}
+                  onPress={() => isAvailable && setSelectedRole(r.name)}
+                  className={`border-2 ${isSelected ? "border-primary bg-primary/5" : "border-transparent"} ${!isAvailable ? "opacity-50 cursor-not-allowed bg-default-100" : ""} shadow-sm`}
+                >
+                  <CardHeader className="flex flex-col items-center gap-2 pb-2">
+                    <h4 className="font-bold text-xl">{r.name}</h4>
+                    <p className="text-primary font-semibold">
+                      {r.price.toLocaleString()} VND
+                    </p>
+                  </CardHeader>
+                  <Divider />
+                  <CardBody className="py-4">
+                    {!isAvailable && (
+                      <div className="text-center text-sm font-semibold text-danger mb-3">
+                        {userWeight >= roleW ? "Đã sở hữu" : "Không khả dụng"}
+                      </div>
+                    )}
+                    <ul className="text-sm text-default-600 flex flex-col gap-3">
+                      {r.permissions &&
+                        r.permissions.map((p: string) => {
+                          const label =
+                            PERMISSIONS_LIST.find((perm) => perm.value === p)
+                              ?.label || p;
+                          return (
+                            <li key={p} className="flex items-start gap-2">
+                              <span className="text-primary mt-1">•</span>
+                              <span>{label}</span>
+                            </li>
+                          );
+                        })}
+                    </ul>
+                  </CardBody>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <div>No VIP packages available right now.</div>
+        )}
+      </ModalBody>
+      <ModalFooter>
+        {roles.length > 0 && (
+          <Button color="primary" onClick={onSubmit}>
+            Confirm
+          </Button>
+        )}
+      </ModalFooter>
+    </ModalContent>
+  );
 }
