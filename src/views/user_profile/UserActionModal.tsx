@@ -1,4 +1,4 @@
-import { ServerUrl } from '@/src/libs';
+import { ServerUrl, BaseUrl } from '@/src/libs';
 import { refreshToken } from '@/src/libs/serverAction/auth';
 import {
     changePassword,
@@ -6,6 +6,8 @@ import {
     purchaseVIP,
     updateUserInformation,
     uploadAvatar,
+    fetchAvailableRoles,
+    checkPaymentStatus,
 } from '@/src/libs/serverAction/user';
 import { useAuth } from '@/src/provider/AuthProvider';
 import {
@@ -326,8 +328,8 @@ function UpdateUserInformation({ onOpenChange }: formProps) {
     const avatarUrl = preview
         ? preview
         : basicUserInfor?.avatar
-          ? `${ServerUrl}${basicUserInfor.avatar}`
-          : '/user.svg';
+            ? `${ServerUrl}${basicUserInfor.avatar}`
+            : '/user.svg';
 
     return (
         <ModalContent className="p-4">
@@ -598,30 +600,105 @@ function Deposit({ onOpenChange }: formProps) {
 function PurchaseVIP() {
     const router = useRouter();
     const { basicUserInfor } = useAuth();
-    const vip = basicUserInfor.vip_role as number;
+    const [roles, setRoles] = useState<any[]>([]);
+    const [loadingRoles, setLoadingRoles] = useState(true);
+    const [selectedRole, setSelectedRole] = useState<string>('');
+    const [qrData, setQrData] = useState<{ url: string; orderId: string } | null>(null);
+    const [polling, setPolling] = useState(false);
 
-    const [formData, setFormData] = useState<PurchaseVIPPayload>({
-        vipLevel: 1,
-    });
-
-    const canBuyVIP = (vip: number) => {
-        if (!basicUserInfor) return false;
-        if (basicUserInfor.vip_role === 0) return true;
-        return vip > basicUserInfor.vip_role;
-    };
+    useEffect(() => {
+        const loadRoles = async () => {
+            try {
+                const data = await fetchAvailableRoles();
+                if (data.success && data.data) {
+                    // Filter roles that have price > 0
+                    setRoles(data.data.filter((r: any) => r.price > 0));
+                }
+            } catch (err) {
+                console.error("Failed to load roles", err);
+            } finally {
+                setLoadingRoles(false);
+            }
+        };
+        loadRoles();
+    }, []);
 
     const onSubmit = async () => {
+        if (!selectedRole) {
+            toast.error("Please select a VIP role to purchase");
+            return;
+        }
+
         await refreshToken();
 
-        const res = await purchaseVIP(formData);
+        const res = await purchaseVIP({ role_name: selectedRole });
 
-        if (res.success) {
-            toast.success(res.message);
-            router.refresh();
+        if (res.success && res.data) {
+            setQrData({ url: res.data.payment_url, orderId: res.data.order_id });
+            startPolling(res.data.order_id);
         } else {
             toast.error(res.message);
         }
     };
+
+    const startPolling = (orderId: string) => {
+        setPolling(true);
+        const interval = setInterval(async () => {
+            try {
+                const res = await checkPaymentStatus(orderId);
+                if (res.success && res.status === '0') { // success
+                    clearInterval(interval);
+                    setPolling(false);
+                    toast.success("Payment successful! VIP upgraded.");
+                    // The server action already handles the token if the backend returned one,
+                    // but we might need to refresh the page to see changes.
+                    router.refresh();
+                    window.location.reload();
+                } else if (res.success && res.status === 'failed') {
+                    clearInterval(interval);
+                    setPolling(false);
+                    toast.error("Payment expired or failed.");
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }, 5000); // poll every 5s
+
+        // Stop polling after 15 mins (900s)
+        setTimeout(() => {
+            clearInterval(interval);
+            setPolling(false);
+        }, 15 * 60 * 1000);
+    };
+
+    if (qrData) {
+        return (
+            <ModalContent>
+                <ModalHeader className="flex flex-col gap-1 text-2xl">
+                    Scan to Pay
+                </ModalHeader>
+                <ModalBody className="flex flex-col items-center py-6">
+                    <img src={qrData.url} alt="VietQR" className="w-64 h-64 border rounded-xl shadow-sm" />
+                    <p className="mt-4 text-center text-default-500">
+                        Scan this QR code with your banking app to upgrade your VIP level.
+                    </p>
+                    {polling && (
+                        <div className="mt-4 flex items-center gap-2 text-primary font-medium">
+                            <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></span>
+                            Waiting for payment...
+                        </div>
+                    )}
+                </ModalBody>
+                <ModalFooter>
+                    <Button color="primary" onClick={() => {
+                        toast.info("Please wait for system confirmation. You can safely close this popup if you have already paid.");
+                    }}>
+                        I have paid
+                    </Button>
+                </ModalFooter>
+            </ModalContent>
+        );
+    }
 
     return (
         <ModalContent>
@@ -629,46 +706,27 @@ function PurchaseVIP() {
                 Purchase VIP
             </ModalHeader>
             <ModalBody>
-                {canBuyVIP(3) ? (
+                {loadingRoles ? (
+                    <div>Loading available roles...</div>
+                ) : roles.length > 0 ? (
                     <Select
                         disableAnimation
-                        placeholder="Select VIP level"
-                        onChange={(e) => {
-                            if (!basicUserInfor) return;
-                            const value = Number(e.target.value);
-                            if (value <= basicUserInfor.vip_role) {
-                                toast.error('You already have this VIP role');
-                                return;
-                            }
-                            setFormData({
-                                vipLevel: Number(e.target.value),
-                            });
-                        }}
+                        placeholder="Select VIP package"
+                        selectedKeys={selectedRole ? [selectedRole] : []}
+                        onChange={(e) => setSelectedRole(e.target.value)}
                     >
-                        {vip < 1 ? (
-                            <SelectItem key={'1'} value={'1'}>
-                                VIP 1
+                        {roles.map((r) => (
+                            <SelectItem key={r.name} value={r.name}>
+                                {r.name} - {r.price.toLocaleString()} VND
                             </SelectItem>
-                        ) : (
-                            (null as any)
-                        )}
-                        {vip < 2 ? (
-                            <SelectItem key={'2'} value={'2'}>
-                                VIP 2
-                            </SelectItem>
-                        ) : (
-                            (null as any)
-                        )}
-                        <SelectItem key={'3'} value={'3'}>
-                            VIP 3
-                        </SelectItem>
+                        ))}
                     </Select>
                 ) : (
-                    'Your VIP role is already at the highest level'
+                    <div>No VIP packages available right now.</div>
                 )}
             </ModalBody>
             <ModalFooter>
-                {canBuyVIP(3) && (
+                {roles.length > 0 && (
                     <Button color="primary" onClick={onSubmit}>
                         Confirm
                     </Button>

@@ -11,7 +11,7 @@ import Link from "next/link";
 
 export default function PublicNavbar() {
   return (
-    <Navbar maxWidth="full" className="bg-[#DCF0FF] fixed">
+    <Navbar maxWidth="full" className="bg-[#DCF0FF] sticky top-0 z-50">
       <NavbarBrand>
         <Image
           src="/logo.png"

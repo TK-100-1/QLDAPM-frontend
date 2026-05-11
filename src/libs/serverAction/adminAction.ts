@@ -82,3 +82,54 @@ export async function changeUserRoleAction(userId: string, role: string) {
     };
   }
 }
+
+export async function createRoleAction(payload: any) {
+  const cookieStore = cookies();
+  const token = cookieStore.get("token")?.value;
+  try {
+    const res = await axios.post(`${BaseUrl}/admin/roles`, payload, {
+      headers: { Authorization: token },
+    });
+    revalidatePath("/admin/roles");
+    return { success: true, message: res.data.message || "Role created" };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.error || "Failed to create role",
+    };
+  }
+}
+
+export async function updateRoleAction(roleId: string, payload: any) {
+  const cookieStore = cookies();
+  const token = cookieStore.get("token")?.value;
+  try {
+    const res = await axios.put(`${BaseUrl}/admin/roles/${roleId}`, payload, {
+      headers: { Authorization: token },
+    });
+    revalidatePath("/admin/roles");
+    return { success: true, message: res.data.message || "Role updated" };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.error || "Failed to update role",
+    };
+  }
+}
+
+export async function deleteRoleAction(roleId: string) {
+  const cookieStore = cookies();
+  const token = cookieStore.get("token")?.value;
+  try {
+    const res = await axios.delete(`${BaseUrl}/admin/roles/${roleId}`, {
+      headers: { Authorization: token },
+    });
+    revalidatePath("/admin/roles");
+    return { success: true, message: res.data.message || "Role deleted" };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.error || "Failed to delete role",
+    };
+  }
+}

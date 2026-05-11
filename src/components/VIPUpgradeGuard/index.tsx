@@ -24,6 +24,11 @@ export default function VIPUpgradeGuard({
     "VIP-1": 1,
     "VIP-2": 2,
     "VIP-3": 3,
+    "user": 0,
+    "VIP_0": 0,
+    "VIP_1": 1,
+    "VIP_2": 2,
+    "VIP_3": 3,
     Admin: 99,
   };
 
