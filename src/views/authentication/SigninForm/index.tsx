@@ -31,7 +31,6 @@ export default function SignInForm() {
     console.log("[handleSignIn] result:", res);
     if (res.success) {
       toast.success(res.message);
-      router.refresh();
       if (res.data?.role === "Admin") {
         router.push("/admin/dashboard");
       } else {

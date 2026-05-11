@@ -30,6 +30,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PERMISSIONS_LIST } from "../admin/RolesView";
+import Image from "next/image";
 
 interface Props {
   isOpen: boolean;
@@ -686,10 +687,12 @@ function PurchaseVIP() {
           Scan to Pay
         </ModalHeader>
         <ModalBody className="flex flex-col items-center py-6">
-          <img
+          <Image
             src={qrData.url}
             alt="VietQR"
-            className="w-64 h-64 border rounded-xl shadow-sm"
+            width={256}
+            height={256}
+            className="border rounded-xl shadow-sm"
           />
           <p className="mt-4 text-center text-default-500">
             Scan this QR code with your banking app to upgrade your VIP level.
